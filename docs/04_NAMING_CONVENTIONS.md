@@ -24,7 +24,39 @@ NutritionPlanItem ayrı EF tablosu değildir; program/snapshot içindeki kalemdi
 
 ## Korunan gelecek kapsamı
 
-FoodItem (hibrit besin kataloğu), Recipe (özel tarif), FoodAnalysis (görsel tahmin), LabReport/LabResult (rapor/değer), LabInsight (açıklayıcı değerlendirme), ConsentRecord (onay kanıtı) adları korunur. Bunların mevcut EF kaydı/servisi yoktur. Bildirim/PDF için kesinleşmemiş yeni entity, enum veya DTO adı türetilmez. Alan adayları [05](05_DATA_DICTIONARY.md), gereksinimler [10](10_AI_SPEC.md) içindedir.
+FoodItem (hibrit besin kataloğu), Recipe (özel tarif) ve FoodAnalysis (görsel tahmin) adları korunur; alan adayları [05](05_DATA_DICTIONARY.md)'tedir. Laboratuvar adları aşağıdaki U7 sözleşmesinde kesinleşmiştir. Bu gelecek modellerin mevcut EF kaydı/servisi yoktur. Bildirim/PDF için kesinleşmemiş yeni entity, enum veya DTO adı türetilmez.
+
+## U7 — onaylı laboratuvar adları, henüz uygulanmadı
+
+29.11.2026 tarihli kullanıcı teyidi ortak onayı kaydeder. Şema [05](05_DATA_DICTIONARY.md), HTTP/DTO [06](06_API_CONTRACT.md), güvenlik [11](11_SECURITY_AND_RELEASE.md) kaynağıdır. Bu bölüm mevcut kodda kategori veya endpoint açmaz.
+
+| Kavram | Kanonik ad |
+|---|---|
+| Danışana ait rapor / sonuç satırı | LabReport / LabResult |
+| Orijinal belge / raporun ilişkiye paylaşılması | LabReportDocument / LabReportShare |
+| Yerel metin/OCR çıkarım işi | LabProcessingJob |
+| Değişmez içerik sürümü / uzman doğrulama kanıtı | LabReportVersion / LabReportVerification |
+| Sürüme bağlı uzman notu veya kurallı açıklama | LabInsight |
+| Amaç ve ilişki kapsamlı açık onay kanıtı | ConsentRecord |
+
+| Tip/kod grubu | JSON değerleri |
+|---|---|
+| Yeni DataSharingPermission.category | lab_reports; mevcut beş kategori ayrıca korunur |
+| LabReportSource / LabResultSource | document, manual / pdf_text, ocr, manual |
+| LabDocumentStatus | quarantined, clean, rejected, pending_deletion, deleted |
+| LabProcessingStatus | queued, processing, succeeded, failed, cancelled |
+| LabVerificationStatus (türetilen) | unverified, verified, stale |
+| LabResultReviewStatus | pending_review, accepted, excluded |
+| LabResultChange.operation | add, update, exclude |
+| LabFlag | low, normal, high, unknown |
+| LabValueComparator | equal, less_than, less_than_or_equal, greater_than, greater_than_or_equal |
+| LabDateKind | collection, result, unknown |
+| LabInsightMethod | expert_note, reference_rules |
+| ConsentRecord.consentType / scope | lab_report_sharing / relationship |
+
+Belgedeki L/N/H metni `sourceFlag`tır; `flag` sunucunun referans karşılaştırmasıdır. İkisi aynı alan değildir. Çıkarım başarısı uzman doğrulaması değildir; FoodAnalysisStatus laboratuvar işlerinde kullanılmaz. `processing` operasyonel durumdur; raporda henüz iş yoksa processingStatus null'dır.
+
+Ortak metadata DTO'su LabReportSummaryResponse, içindeki belge özeti LabDocumentSummary'dir. Sonuç, iş, paylaşım, sürüm, doğrulama ve not DTO'ları sırasıyla LabResultResponse, LabProcessingResponse, LabReportShareResponse, LabReportVersionInfo/LabReportVersionResponse, LabReportVerificationResponse ve LabInsightResponse adlarını kullanır. İstek adları ve alanları yalnız [06](06_API_CONTRACT.md)'da tanımlanır; aynı amaç için mobil/web kopyası üretilmez.
 
 ## Kimlik ve dil kuralları
 
@@ -54,7 +86,7 @@ FoodItem (hibrit besin kataloğu), Recipe (özel tarif), FoodAnalysis (görsel t
 
 Enum'un sözlükte bulunması her endpointin bütün değerleri kabul ettiği anlamına gelmez. Örneğin manuel öğün/su/ölçüm POST'u yalnız manual kabul eder. integer enum kabul edilmez. C# AiAssisted/Dart aiAssisted farklı yazılsa da JSON ai_assisted kalır.
 
-FoodAnalysisStatus için pending/processing/completed/failed ve LabFlag için low/normal/high/unknown gelecekteki sözlük değerleridir; henüz çalışan enum/endpoint değildir. Bunlar OCR veya LabInsight iş durumlarına otomatik uygulanmaz.
+FoodAnalysisStatus için pending/processing/completed/failed gelecekteki sözlük değerleridir; henüz çalışan enum/endpoint değildir. Laboratuvarın onaylı fakat uygulanmamış kodları U7 tablosundadır.
 
 ## Değişiklik kuralı
 
