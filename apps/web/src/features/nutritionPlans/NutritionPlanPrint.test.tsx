@@ -251,7 +251,7 @@ describe('printable nutrition programs', () => {
     render(<WorkspaceContext.Provider value={session}><NutritionPlanPanel clientId={clientId} clientName="Örnek İpek" showPrintAction /></WorkspaceContext.Provider>)
     await user.click(await screen.findByRole('button', { name: 'Programı düzenle' }))
     fireEvent.change(screen.getByLabelText('Program başlığı'), { target: { value: 'Kaydedilmemiş taslak başlığı' } })
-    await user.click(screen.getByRole('button', { name: 'Sentetik program 1 programını yazdır' }))
+    await user.click(screen.getByRole('button', { name: 'Yazdır' }))
     await waitFor(() => expect(printButton()).toBeEnabled())
     expect(documentView()).toHaveTextContent('Sentetik program 1')
     expect(documentView()).not.toHaveTextContent('Kaydedilmemiş taslak başlığı')
