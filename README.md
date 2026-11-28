@@ -14,7 +14,7 @@ Diyetisyen odaklı beslenme takip platformu: danışan için Flutter mobil uygul
 | Manuel öğün/su/ölçüm, kişisel hedefler, grafik, yorum/cevap ve görevler | Bildirim/hatırlatma teslimi, PDF raporu, geniş Admin/audit operasyonları |
 | Native sağlık okuma ve ön plan HTTP aktarımı, manuel aktivite API'si | Fiziksel Android/iOS sağlık doğrulaması; mobil manuel aktivite formu |
 | Açık/koyu tema ve ortak başlangıç tokenları | Nihai marka ve kapsamlı erişilebilirlik/cihaz onayı |
-| Manuel kayıtların AI'dan bağımsız çalışması | Hibrit besin kataloğu/tarif, fotoğraftan yemek tahmini, manuel tahlil, ardından kullanıcı onaylı OCR ve açıklayıcı değerlendirme |
+| Manuel kayıtların AI'dan bağımsız çalışması | Hibrit besin kataloğu/tarif, danışan onaylı yemek analizi, manuel tahlil, danışan onaylı tahlil belgesi paylaşımı ve diyetisyen doğrulamalı OCR/açıklayıcı değerlendirme |
 
 Mobil “Aktivite ekle”/“Tahlil ekle” ve web laboratuvar/aktivite önizlemeleri çalışan kayıt akışı değildir. Sentetik API testi fiziksel sağlık cihazı testi sayılmaz. Ürün kapsamı ve akışlar [01](docs/01_PROJECT_SCOPE.md), gerçek mobil/web ekranları [07](docs/07_MOBILE_SPEC.md)/[08](docs/08_WEB_SPEC.md)'dedir.
 

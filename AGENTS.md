@@ -50,7 +50,7 @@ Sıfırdan geliştirilen diyetisyen odaklı mobil + web + API ürünüdür. Çal
 - Eski fitness repo/doküman/kodlarını kopyalama, taşıma veya referans alma. Trainer, workout planı, gym ekipmanı kapsamda yoktur; yalnız beslenmeye destek günlük fiziksel aktivite kaydı vardır.
 - Yetkiyi **sunucuda her işlemde** kontrol et. Doğrulanmış diyetisyen yalnız aktif ilişkili ve kategori izni verilmiş danışan verisini görür; tahliller ayrıca geri çekilmemiş açık onay gerektirir. Admin sağlık verisini varsayılan göremez. Danışanın kendi verisine erişimi diyetisyen ilişkisine bağlı değildir.
 - En fazla bir aktif diyetisyen ve kişisel/atanmış toplamında bir aktif beslenme programı kuralını, geçmişi ve veri sahipliğini koru. Danışan atanmış programı/hedefleri değiştiremez; gerçek tüketimini serbestçe kaydeder.
-- Gıda fotoğrafından kalori/porsiyon tahmindir; kullanıcı düzeltip onaylamadan sağlık kaydı oluşmaz. Tahlil/OCR çıktısı kullanıcı onayı gerektirir, tanı/tedavi değildir; geçerli birim ve laboratuvar referansı yoksa kesin yorum verme.
+- Gıda fotoğrafından kalori/porsiyon tahmindir; danışan sonucu kontrol edip gerekirse düzelterek açıkça onaylamadan MealLog oluşmaz. Tahlil belgesi paylaşımını danışan onaylar; OCR ile çıkarılan tahlil sonuçlarını diyetisyen doğrular. Tahlil çıktısı tanı/tedavi değildir; geçerli birim ve laboratuvar referansı yoksa kesin yorum verme.
 - Gerçek sağlık verisini seed/test/log içine koyma; sentetik veri kullan, sırları commit etme. Sağlık verisi, KVKK, açık rıza, silme, audit ve mağaza yayını için `docs/11_SECURITY_AND_RELEASE.md` kurallarını koru.
 
 ## 7. Doğrulama ve sonuç raporu
