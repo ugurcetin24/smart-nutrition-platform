@@ -1,16 +1,35 @@
 # 12 — Güncel sorumluluklar, özellik durumu ve açık kararlar
 
-Kaynak incelemesi: **22.11.2026**, yerel kod tabanı **`4f160b3`**. Güncel uygulama ile geçmiş teslim beyanları ayrılmıştır. Bu belge güncellemesinde servis/test/cihaz çalıştırılmadı, uygulama DB'sine bağlanılmadı. Özellik için “kod mevcut”, “geçmişte test edildiği raporlanmış” ve “yeni ortamda doğrulanmış” farklı kanıtlardır.
+Genel durum matrisi **22.11.2026 / `4f160b3`** kaynak incelemesine dayanır; AI/katalog/tahlil satırları **28.11.2026 / `3870991`** yerel kaynağı ve 3 Aralık ürün kararlarıyla güncellenmiştir. Güncel uygulama ile geçmiş teslim beyanları ayrılmıştır. Bu belge güncellemesinde servis/test/cihaz çalıştırılmadı, uygulama DB'sine bağlanılmadı. Özellik için “kod mevcut”, “geçmişte test edildiği raporlanmış” ve “yeni ortamda doğrulanmış” farklı kanıtlardır.
 
 ## Görev sahipliği ve çalışma ilkeleri
 
 Mert ağırlıklı Flutter/mobil, Uğur ağırlıklı React/web geliştirir. **Backend/API/DB/migration/test/entegrasyonu ikisi de üstlenebilir**, önceki geliştiricinin modülü kalıcı özel alan değildir. Sorumluluk güncel görev ve izinli dosyalara göre belirlenir. AI ortaktır; her işte tek değişiklik sorumlusu atanır.
 
-Güncel yazma/Git/koordinasyon kurallarının tek kaynağı [AGENTS.md](../AGENTS.md)'dir. Aynı checkout'a iki oturum yazmaz; aynı dosya/özellik ve özellikle AppDbContext, migration, snapshot ve ortak sözleşmede koordinasyonsuz paralel yazma olmaz. Görev devrinde dosya listesi, mevcut diff, bağımlılık ve doğrulama sınırı paylaşılır.
+Güncel yazma/Git/koordinasyon kuralları [AGENTS.md](../AGENTS.md) ve güncel kullanıcı talimatına tabidir. Aynı checkout'a iki oturum yazmaz; aynı dosya/özellik ve özellikle AppDbContext, EF migration, ModelSnapshot, Program.cs, ortak yapılandırmalar ve ortak sözleşmede koordinasyonsuz paralel yazma olmaz. Görev devrinde dosya listesi, mevcut diff, bağımlılık ve doğrulama sınırı paylaşılır.
 
 Mert'in yerel main, Uğur'un fork/feature branch → ortak main PR modeli korunur; kullanıcı talimatı olmadan Git işlemi veya belge değişikliği yapılmaz. Eski plandaki kalıcı “backend/docs yalnız Uğur” ve herkese zorunlu feature branch hükümleri geçerli çalışma kuralı değildir. M1–M6/U1–U6 tarihsel görev kimlikleridir; yeni işe başlamanın zorunlu şartı değildir.
 
 Sözleşme değişikliği diğer geliştiriciye method/route/DTO, profil/yetki, hata, migration, istemci etkisi ve test durumu ile aktarılır. Önceki API'yi kullanan istemciyle uyum kontrol edilmeden yeni kategori/açılım entegrasyonu tamamlandı sayılmaz. Bayrak kapatmak eski istemciye dönüşü tek başına güvenli yapmaz; bilinmeyen kategori satırları da değerlendirilir.
+
+## 3 Aralık 2026 — AI ve entegrasyon görevleri
+
+**Durum: ürün kararları ve görev dağılımı kesin; aşağıdaki işler geliştirilmiş veya test edilmiş sayılmaz.** Yemek analizi Gemini API ile ASP.NET Core backend üzerinden yürütülecek, enerji/makrolar doğrulanmış katalogdan hesaplanacak ve MealLog için kullanıcı onayı gerekecektir. Mevcut öğünler, kişisel hedefler ve Dashboard korunur. Tahlilde mobil yükleme/geçmiş/durum/paylaşım; React webde belge/sonuç inceleme, manuel giriş, uzman düzeltme/doğrulama ve notlar bulunacaktır. Mobilde OCR, referans değerlendirmesi veya AI tahlil analizi gösterilmez. Ayrıntılı ürün akışının kaynağı [10](10_AI_SPEC.md)'dur.
+
+| Mert | Görev | Uğur | Görev |
+|---|---|---|---|
+| M7 | Gemini araştırması ve prototip | U7 | Tahlil veri modeli ve API sözleşmesi |
+| M8 | Besin kataloğu backend | U8 | Güvenli tahlil belge yönetimi ve yetkilendirme |
+| M9 | Gemini backend entegrasyonu | U9 | PDF metin/tablo ayrıştırma |
+| M10 | Besin eşleştirme ve makro hesaplama | U10 | Python/FastAPI OCR servisi |
+| M11 | Flutter yemek analizi ve MealLog entegrasyonu | U11 | Tahlil backend entegrasyonu ve referans değerlendirmesi |
+| M12 | Flutter tahlil yükleme ve paylaşım onayı | U12 | React diyetisyen tahlil paneli |
+| M13 | Flutter tahlil geçmişi ve işlem durumu | U13 | Manuel tahlil girişi, uzman doğrulaması ve notlar |
+| M14 | Mobil ve yemek analizi testleri | U14 | Geçmiş karşılaştırmaları, ML araştırması ve genel testler |
+
+Her iki geliştirici kendi görevinin backend tarafını geliştirebilir. Ortak dosyalarda görev bazında tek değişiklik sorumlusu belirlenir; aynı anda iki migration üretilmez ve ortak migration sırası açık karardır. U10'daki servis görevi Python/FastAPI, PaddleOCR ve PDF araçlarının uygunluk araştırmasına bağlıdır; kesin araç/sürüm seçimi değildir. Gemini için ayrı Python servisi zorunlu değildir.
+
+Yemek hattında M7 araştırması, tahlil hattında U7 sözleşme çalışması ve U9/U10 uygunluk araştırmaları ilgili backend ve istemci görevlerine girdi sağlar. Açık teknik kararlar ilgili entegrasyondan önce ortak karara bağlanır; bağımsız işler ortak dosyalarda çakışmadan ilerleyebilir. M14/U14, mevcut öğün/hedef/Dashboard davranışını ve yeni onay/yetki akışlarını doğrulayacaktır.
 
 ## Uygulama ve doğrulama matrisi
 
@@ -28,8 +47,8 @@ Sözleşme değişikliği diğer geliştiriciye method/route/DTO, profil/yetki, 
 | Görev | Backend, React atama/takip, Flutter liste/durum/geçmiş ve kategori | Snapshot/sürüm/yetki testleri, U6 web/API raporu ve mobil live probe var; hatırlatma gönderimi yok |
 | Sağlık platformu ve API | Native okuma, açık ön plan upsert, bağlantı/receipt/özet ve manuel aktivite API'si | Sentetik reader/sync/API testleri ve probe dosyaları var. Fiziksel Android/HealthKit, gerçek sensör/native ID ve OS kapsamı bu incelemede doğrulanmadı |
 | Manuel aktivite mobil formu | Ana sayfa hızlı işlem hâlâ önizleme | API varlığı UI teslimi değildir; gerçek manuel form/gelişmiş aktivite geçmişi eksik |
-| Besin kataloğu/tarif/AI yemek | Onaylı kapsam, çalışan entity/servis/controller yok | Sağlayıcı/lisans/model/dosya/onay tasarımı ve uygulama gerekli |
-| Manuel tahlil/OCR/LabInsight | Onaylı kapsam; mobil/web tahlil önizlemesi gerçek kayıt değil | Henüz DB/API yok; manuel temel → onaylı OCR; bilimsel ML opsiyonel |
+| Besin kataloğu/tarif/AI yemek | 397 kayıtlık bağımsız USDA önizlemesi var; uygulamaya bağlı FoodItem/FoodAnalysis entity/servis/controller ve Gemini entegrasyonu yok | Gemini seçimi ürün kararıdır; kaynak/lisans/eşleştirme, model sürümü, dosya/onay tasarımı ve entegrasyon gerekli |
+| Tahlil belgesi/manuel giriş/OCR/LabInsight | Gerçek belge/DB/API akışı yok; React sentetik laboratuvar görünümü teslim değil | Mobil yükleme/geçmiş/durum/paylaşım, webde manuel giriş/uzman doğrulaması, yerel ayrıştırma/OCR ve geçmiş karşılaştırması geliştirilecek; ML koşullu araştırma |
 | Bildirim/PDF/geniş Admin/Audit | Onaylı kapsam; yalnız uzman onayı audit'i ve uzman Admin ekranı mevcut | Teslim/dosya/moderasyon/operasyon şemaları ve uygulama açık |
 | Tasarım | İki tema ve başlangıç tokenları kaynakta var | Nihai marka, tam erişilebilirlik ve bütün platform/görsel doğrulama ayrıca gerekli |
 
@@ -43,7 +62,7 @@ Geçmiş sayımlar README'ye güncel sonuç olarak taşınmamıştır. Bu görev
 
 ## Kesinleşmiş 22 kararın korunması
 
-Bu kayıt ürün kararlarını korur; ayrıntı kendi ana belgesindedir. Son kullanıcı talimatıyla 21'in kişi bazlı sahiplik yorumu güncellenmiştir.
+Bu kayıt ürün kararlarını korur; ayrıntı kendi ana belgesindedir. Güncel kullanıcı talimatıyla 10'un yemek sağlayıcısı Gemini olarak, 11'in tahlil akışı mobil yükleme ve webde uzman doğrulaması olarak kesinleşmiştir; 21 görev bazlı sahipliği korur.
 
 | No | Korunan karar | Ana kaynak |
 |---|---|---|
@@ -56,8 +75,8 @@ Bu kayıt ürün kararlarını korur; ayrıntı kendi ana belgesindedir. Son kul
 | 7 | İlk sürüm öğün yorum/cevap/bildirim; sohbet sonraki sürüm | 01 |
 | 8 | Kategori izni ve tahlilde ayrıca açık onay | 11 |
 | 9 | Fotoğraf/galeri tahmini ve kullanıcı onayı; sürekli video sonraki aşama | 10 |
-| 10 | Hibrit besin kaynağı, uygun hazır model/API ve özel tarif | 10 |
-| 11 | Önce manuel tahlil, ardından kullanıcı onaylı PDF/fotoğraf OCR | 10 |
+| 10 | Hibrit besin kaynağı ve özel tarif; yemek tanıma/porsiyon için backend üzerinden Gemini, enerji/makrolar doğrulanmış katalogdan | 10 |
+| 11 | Mobil tahlil belgesi yükleme/paylaşım; webde manuel giriş ve uzman doğrulamalı yerel PDF/OCR; mobilde analiz gösterilmez | 07/08/10 |
 | 12 | Referans karşılaştırması, doğrulanabilir ML opsiyonel, tanı/tedavi yok | 10 |
 | 13 | Health Connect/HealthKit ve kaynak/tekilleştirme | 20 |
 | 14 | Düzenlenebilir kişisel kalori/makro/su; uzman hedefi salt okunur | 01, 06 |
@@ -84,6 +103,26 @@ Sonraki ortak onaylı paketlerin güncel sonucu 04/05/06'da yer alır: kayıt/do
 
 ## Açık kararlar ve somut uyuşmazlıklar
 
+### AI ve tahlil için henüz kesinleşmeyen teknik kararlar
+
+| Konu | Açık karar |
+|---|---|
+| Gemini modeli ve kullanım sınırları | Model sürümü, kota ve maliyet sınırları |
+| Gemini ve yemek görüntülerinin mahremiyeti | Veri işleme koşulları ve yemek görüntülerinin mahremiyeti; gerçek tahlillerin Gemini veya başka harici AI'ya gönderilmeyeceği kesindir |
+| Besin kataloğu | Veri kaynağı, lisansı ve eşleştirme yöntemi; USDA önizlemesi üretim kaynağı seçimi değildir |
+| Kesin veri şemaları | FoodItem, FoodAnalysis, LabReport ve LabResult; uzman doğrulaması, notlar ve geçmişle ilişkili teknik kayıtlar |
+| HTTP ve analiz yaşam döngüsü | API rotaları, DTO'lar, hata sözleşmeleri ve analiz/işlem durumları |
+| Belge yaşam döngüsü | Saklama yöntemi, saklama süresi ve silme politikası |
+| Dosya sınırları | Dosya türü, boyutu ve PDF sayfa sınırları; PDF/fotoğraf/ekran görüntüsü ürün girdileridir |
+| OCR başlatma | Otomatik veya diyetisyen tarafından başlatılması |
+| Tahlile özel açık onay | Teknik model ve sunucu kanıtı; bağımsız paylaşım izni ve geri çekmede erişimin kapanması ürün gereksinimidir |
+| PDF/OCR araçları | Python/FastAPI, PaddleOCR ve PDF ayrıştırma araçlarının uygunluğu; kesin araçlar ve sürümler |
+| Ortak migration sırası | M8 ile U7/U8/U11 değişikliklerinin AppDbContext, ModelSnapshot, Program.cs ve ortak yapılandırmalarla koordinasyonu |
+
+**Korunan belgelerle fark:** Bu görevde [04](04_NAMING_CONVENTIONS.md), [05](05_DATA_DICTIONARY.md), [06](06_API_CONTRACT.md), AGENTS.md ve README dosyaları değişmez. 05/06'daki model/HTTP adayları yeni ürün akışının kesin şeması değildir; mevcut paylaşım yalnız beş kategori ve null consentRecordId kabul eder, mevcut öğün yazması AI/katalog referanslarını reddeder. AGENTS.md ve kök README'deki kullanıcı onaylı OCR ifadeleri yeni tahlil akışına uyarlanmamıştır: güncel ürün kararında danışan belge yükleme/paylaşımını yönetir, OCR sonucunu webde uzman doğrular. Teknik sözleşmeler araştırma sonrasında bu ayrım, yetkili uzman yazmaları ve istemci etkileriyle ortak karara bağlanmalıdır; eski taslaklardan yeni kod/DTO üretilmez.
+
+### Diğer açık kararlar ve uygulama farkları
+
 | Konu | Doğrulanan sınır / gereken karar |
 |---|---|
 | Mobil Profil akışının uygulanması | Ürün kararı kesindir; uygulama eksiktir. API ve eski DietitianAccountPage mevcut; aktif AuthGate /dietitian-account yolunu WebPanelPage'e çeviriyor, ProfilePage'de başvuru bağlantısı yok. React başvuru metni kullanıcıyı mobil Profil'e yönlendiriyor. Profil başvuru/durum ve onaylı panel geçişi ayrı kod görevi ve uygulama doğrulaması gerektirir; mevcut UI tamamlanmış sayılmaz |
@@ -93,8 +132,8 @@ Sonraki ortak onaylı paketlerin güncel sonucu 04/05/06'da yer alır: kayıt/do
 | Gün ve uyum | Su/karşılaştırma/sağlık için somut gün sınırı var; tüm uygulamanın kayıtlı danışan saat dilimi, geçmiş aktivasyon çizelgesi ve genel uyum formülü yok |
 | Cihaz kapsamı | Gerçek Android/iOS izin/sensör/cihaz/OS testi, kararlı native ID ve destek listesi gerekli. Otomatik arka plan sync ve native silme delta entegrasyonu uygulanmış değil; eksik pencere silme sayılmaz |
 | Uzman yaşam döngüsü/profil | Mesleki açıklama ve onay mevcut; belge yükleme, doğrulama ölçütleri, ret/yeniden başvuru/geri alma, genel profil düzenleme ve mobil MFA açık |
-| Tarif/katalog/AI | Kaynak/lisans/öncelik, tarif bileşen/porsiyon/görünürlük/geçmiş, model/validasyon, dosya ve kullanıcı onayı kanıtı açık; 10 |
-| Laboratuvar/OCR | Test kodu/birim dönüşümü/referans doğrulama, tam CRUD/alt kayıt/OCR taslak ve onay, LabInsight biçimi/eski sonuç davranışı açık |
+| Tarif/katalog/AI | Yukarıdaki açık kararlara ek olarak kaynak önceliği, tarif bileşen/porsiyon/görünürlük/geçmiş, model validasyonu ve yemek için kullanıcı onayı kanıtı açık; 10 |
+| Laboratuvar/OCR | Test kodu/birim dönüşümü/referans doğrulama, uzman doğrulaması ve düzeltme geçmişi, LabInsight biçimi/eski sonuç davranışı açık; mobilde sonuç analizi gösterilmeyeceği kesindir |
 | İletişim ve PDF | Yorum düzenleme/silme/moderasyon, bildirim/hatırlatma kanalı/teslimi, rapor DTO/dosya yetkisi ve PDF endpointi açık |
 | Güvenlik ve yayın | Retention/silme/yedekten silme/veri hakları/ConsentRecord kanıtı, üretim SMTP/kalıcı teslim, ortak limit/proxy/anahtar/audit/izleme ve dağıtım açık; mevcut parola politikasının güçlendirilmesi/sızmış parola listesi kaynağı ayrı değerlendirme önerisi, mevcut kuralı değiştirmez; 11 |
 | Sayısal ve istemci politikaları | Genel precision/yuvarlama, eski endpointlere ortak metin/pagination/idempotency politikası, kalıcı tema tercihi/nihai marka, ülke-dil/ücretli model açık |
@@ -107,4 +146,4 @@ Aktif ana belge sayısı 12'dir. 02'nin ürün akışları 01'e, yetkileri 06/11
 
 Tüm 22 özgün docs belgesi ve önceki kök README [arşivde](archive/README.md) korunur. Arşivdeki test/teslim/PR ve hazırlık notları kendi tarihlerini anlatır; güncel uygulama durumu olarak kullanılmaz. Kalan ürün gereksinimleri aktif ana belgelerde korunmuştur.
 
-Sonraki önerilen tek adım: mobil Profil'de aynı hesapla başvuru, durum gösterimi ve onaylı diyetisyenin web paneline geçişi için ayrı, dosya kapsamı belirli bir kod görevi açılması.
+Sonraki önerilen tek adım: M7/U7/U9/U10 araştırma ve sözleşme çalışmalarını görev bazında başlatıp yukarıdaki açık teknik kararları iki geliştiriciyle netleştirmek; ardından 04/05/06 için ayrıca yetkilendirilmiş sözleşme güncellemesini hazırlamak.

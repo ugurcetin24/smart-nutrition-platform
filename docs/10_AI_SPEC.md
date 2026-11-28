@@ -1,49 +1,61 @@
 # 10 — AI, besin kataloğu ve laboratuvar/OCR gereksinimleri
 
-**Durum: onaylı ürün kapsamı, henüz uygulama yok.** Kaynakta FoodAnalysis/FoodItem/Recipe/LabReport/LabResult/LabInsight için EF, controller veya çalışan model servisi bulunmuyor. React'teki sentetik tahlil/aktivite önizlemeleri ve mobil “Tahlil ekle” önizlemesi bu kapsamın teslimi değildir.
+**Durum: 3 Aralık 2026 çalışmaları için ürün kararları kesinleşti; uygulama ve doğrulama gerekli.** Kaynakta FoodAnalysis/FoodItem/Recipe/LabReport/LabResult/LabInsight için EF, controller veya çalışan model servisi bulunmuyor. Bağımsız katalog önizlemesi ve React'teki sentetik tahlil görünümü gerçek uygulama entegrasyonu değildir.
 
-İsimler [04](04_NAMING_CONVENTIONS.md), korunmuş alan adayları [05](05_DATA_DICTIONARY.md), mevcut olmayan taslak HTTP yolları [06](06_API_CONTRACT.md)'dadır. Bu belge yeni DTO/endpoint veya sağlayıcı kararı vermez.
+İsimler [04](04_NAMING_CONVENTIONS.md), korunmuş alan adayları [05](05_DATA_DICTIONARY.md), mevcut olmayan taslak HTTP yolları [06](06_API_CONTRACT.md)'dadır. Bu görevde 04/05/06 değişmez; kesin şema, route, DTO, hata ve analiz durumları araştırma sonuçlarından sonra kararlaştırılacaktır. Bu belge ürün akışını ve Gemini seçimini kaydeder; teknik sözleşmeyi kesinleştirmez.
 
 ## Fotoğraftan yemek analizi
 
-Onaylı girdi kamera ile çekilen veya galeriden seçilen tek yemek fotoğrafıdır. Canlı önizlemeden fotoğraf yakalamak yeterlidir; sürekli video analizi sonraki sürüm/araştırmadır.
+Flutter kamera veya galeriden yemek görüntüsü alır. **Google Gemini API**, tek görüntüde tekli ve çoklu yemek tanıma, tahmini porsiyon/gramaj ve yapılandırılmış sonuç üretme amacıyla kullanılacaktır. Sürekli video analizi sonraki sürüm/araştırmadır.
 
-Akış: kontrollü yükleme → modelden besin sınıfı ve belirsizlik → lisanslı katalog eşlemesi → porsiyon/gramın kullanıcıca doğrulanması → tahmini enerji/makro → kontrol, gerekirse düzeltme ve açık onay → ayrı MealLog kaydı.
+Gemini çağrıları ASP.NET Core backend üzerinden yapılır; API anahtarı mobil veya web istemcisine verilmez. Gemini entegrasyonu için ayrı Python servisi zorunlu değildir. Model sürümü, kota/maliyet sınırları ve veri işleme koşulları henüz seçilmemiştir.
 
-Tek fotoğraftan güvenilir 3D hacim veya kesin kalori sözü verilmez. Doğru öneriyi değiştirmek zorunlu değildir. Analiz başlatmak/okumak veya completed durumu onay değildir; otomatik öğün oluşturulmaz. Model başarısız/yavaşsa manuel kayıt devam etmelidir.
+Akış: kontrollü yükleme → Gemini'den yemek ve porsiyon önerileri → doğrulanmış besin kataloğuyla eşleştirme → katalog ve miktar üzerinden enerji/makro hesabı → kullanıcı kontrolü/düzenlemesi ve açık onay → ayrı MealLog kaydı.
 
-Korunan taslakta suggestions öğeleri displayName, confidence ve nullable miktar/enerji/makrolar taşır; limitations analiz kökündedir. Alanlar öneri altına sessizce taşınmaz. Dahili saklama/onay kanıtı ve dosya limitleri kesinleşmeden kalıcı şema üretilmez.
+Kalori, protein, karbonhidrat ve yağ değerleri doğrulanmış katalogdan hesaplanır. Gemini'nin besin değeri tahminleri kesin veri kabul edilmez. Kullanıcı tanınan yemekleri, eşleştirilen besinleri ve porsiyonları düzenleyebilir, yemek ekleyip çıkarabilir; doğru öneriyi değiştirmeye zorlanmaz.
+
+Tek fotoğraftan güvenilir 3D hacim veya kesin kalori sözü verilmez. Analizi başlatmak/okumak veya işlemenin tamamlanması onay değildir; kullanıcı açıkça onaylamadan MealLog oluşmaz. Mevcut öğünler, kişisel hedefler ve Dashboard korunur; model başarısız/yavaşsa manuel kayıt devam eder. Gemini'nin yapılandırılmış çıktısı doğrudan kesin API/DB şeması sayılmaz; onay kanıtı ve dosya sınırları teknik kararlara tabidir.
 
 ## Hibrit besin kaynağı ve tarif
 
 FoodItem değerleri tek servingBasisGrams temeline dayanır; enerji kcal, makrolar gramdır. Veri kaynağı, kaynak/lisans, sürüm ve belirsizlik izlenir. Birden çok sağlayıcıda eşleştirme/öncelik/birleştirme kuralları ayrıca belirlenir.
 
+`previews/usda-tr-catalog/` altındaki 397 kayıtlık USDA Türkçe önizlemesi uygulamaya bağlı değildir ve Türk yemeklerini kapsamaz. Önizlemenin varlığı üretim besin kaynağını, lisans seçimini veya eşleştirme yöntemini kesinleştirmez.
+
 Recipe kullanıcının özel tarifidir; bileşen, miktar, porsiyon, toplam/besin hesabı, görünürlük ve geçmiş düzeni açık kararlardır. Katalog/tarif değişikliği eski MealLogItem veya program snapshot'ını yeniden hesaplayıp değiştirmemelidir. Mevcut manuel API'nin dolu katalog/tarif/analiz UUID'lerini reddetmesi, gelecekteki kapsamın kaldırılması değildir.
 
-## Manuel laboratuvar ve açıklama
+## Tahlil belgesi ve uzman çalışma akışı
 
-Önce manuel rapor girişi uygulanır: test adı/kodu, gerçek değer, birim, tarih ve laboratuvar referans aralığı. Geçerli analit/birim/aralık eşleşmesinde yalnız low/normal/high karşılaştırılır; eksik/uyumsuzsa unknown olur. Genel pozitif değer kuralı veya otomatik klinik eşik uydurulmaz.
+Danışan mobil **Diyetisyenim → Tahlillerim** bölümünden PDF, fotoğraf veya ekran görüntüsü yükler; belgelerin geçmişini, işlem durumunu ve paylaşımını yönetir. **Mobilde OCR sonucu, referans aralığı değerlendirmesi veya AI destekli tahlil analizi gösterilmez.** Belge aktif ve yetkili diyetisyenin React paneline bağımsız paylaşım izni ve tahlile özel açık onayla ulaşır; izin/onay geri çekilince veya ilişki sona erince uzman erişimi kapanır.
 
-Ölçüm, birim, referans, tarih ve açıklamanın sınırı birlikte görünmelidir. Geçmiş karşılaştırma aynı analit ve aynı/doğrulanmış dönüştürülmüş birimde yapılır. Rapor değeri değişince eski LabInsight güncel sonuç gibi sunulmaz; sürüm/yeniden analiz davranışı ayrıca kararlaştırılır.
+Diyetisyen orijinal belgeyi ve çıkarılan sonuçları birlikte görüntüler, yanlış çıkarımları düzeltir ve doğrular. Manuel tahlil veri girişi ve uzman değerlendirme notları web panelindedir. OCR çıktısı uzman doğrulaması yapılmadan doğrulanmış tahlil sonucu kabul edilmez. Danışanın yükleme/paylaşım onayı ile uzmanın sonuç doğrulaması farklı amaçlardır; biri diğerinin yerine geçmez.
 
-LabInsight tanı, reçete, tedavi veya hastalık saptama iddiası taşımaz. Diyetisyen klinik kararı kendisi verir; “normal” bayrağı genel sağlıklı hükmü değildir. method/limitations biçimi ve model kaynakları açık karardır.
+Referans karşılaştırması sunucuda yapılır. Geçerli analit/birim/aralık eşleşmesinde yalnız low/normal/high karşılaştırılır; eksik/geçersiz referans veya birimde unknown olur, kesin değerlendirme üretilmez. Genel pozitif değer kuralı veya otomatik klinik eşik uydurulmaz. Belgeden çıkarılan mevcut durum işareti, sunucunun referans karşılaştırmasından ayrı değerlendirilir.
 
-## OCR
+Geçmiş tahlil karşılaştırmaları korunacak ürün gereksinimidir; aynı analit ve aynı/doğrulanmış dönüştürülmüş birim kullanılır. Ölçüm, birim, referans, tarih ve açıklamanın sınırı webde birlikte görünür. Rapor değişince eski LabInsight güncel sonuç gibi sunulmaz; sürüm/yeniden analiz davranışı, method/limitations biçimi ve uzman doğrulamasının teknik kaydı açık karardır.
 
-Manuel temel sonrasında PDF/fotoğraftan OCR onaylı geliştirme aşamasıdır. OCR yalnız taslak üretir. Kullanıcı test/değer/birim/tarih/referansı kontrol edip gerekirse düzelterek açıkça onaylamadan kalıcı LabResult veya değerlendirme oluşmaz. Diyetisyenin yardımcı incelemesi bu onayın yerine geçmez.
+Sistem hastalık teşhisi, tedavi kararı veya kesin klinik yorum üretmez. LabInsight tanı, reçete veya hastalık saptama iddiası taşımaz; “normal” bayrağı genel sağlıklı hükmü değildir.
 
-Dosya MIME/içerik/limit/tarama, private storage, OCR sağlayıcısı, taslak/iş kimliği, senkron/asenkron yanıt ve sunucuda onay kanıtı açık kararlardır. FoodAnalysisStatus OCR'ye otomatik uygulanmaz; job/isConfirmed gibi yeni alanlar varsayılmaz. Laboratuvar belgesi ile dışa aktarılan diyetisyen PDF raporu farklı kavramdır.
+## PDF ayrıştırma ve yerel OCR
+
+İlk geliştirme hedefi e-Nabız tahlil belgeleridir; bütün laboratuvar formatları aynı varsayılmaz. Metin katmanı bulunan PDF'lerde doğrudan metin/tablo ayrıştırma önceliklidir. Fotoğraf, ekran görüntüsü ve taranmış PDF'lerde yerel OCR kullanılır. **Gerçek tahlil belgeleri Gemini veya başka harici AI servislerine gönderilmez.**
+
+Python/FastAPI, PaddleOCR ve PDF ayrıştırma araçları uygunluk araştırmasında değerlendirilir. U10'un OCR servisi görevi bu araştırmaya bağlıdır; kesin PDF/OCR araçları, sürümleri ve servis ayrıntıları henüz seçilmemiştir.
+
+Test adı, değer, birim, referans aralığı, belgedeki mevcut durum işareti ve tarih yapılandırılmış biçimde çıkarılır. Çıktı uzman incelemesi için taslaktır; otomatik çıkarım veya işlemin tamamlanması doğrulanmış sonuç anlamına gelmez.
+
+OCR'nin otomatik veya diyetisyen tarafından başlatılması, dosya türü/boyutu/PDF sayfa sınırları, tarama/depolama/saklama/silme, işleme durumları ve uzman doğrulamasının sunucu kanıtı açık kararlardır. FoodAnalysisStatus OCR'ye otomatik uygulanmaz; yeni iş/DTO/enum alanları varsayılmaz. Laboratuvar belgesi ile dışa aktarılan diyetisyen PDF raporu farklı kavramdır.
 
 ## Model ve değerlendirme
 
-Uygun hazır model/API kullanılabilir; özel eğitim, ayrı servis veya belirli sağlayıcı zorunlu değildir. Gerektiğinde Python/FastAPI onaylıdır. Model sürümü, değerlendirme tarihi, veri kaynağı/lisansı, sınırlılıklar ve bilinen hata örnekleri izlenmelidir.
+Yemek analizi sağlayıcısı Gemini olarak kesinleşmiştir; model sürümü ve kullanım sınırları araştırılacaktır. Özel model eğitimi veya ayrı Python servisi zorunlu değildir. Model sürümü, değerlendirme tarihi, veri kaynağı/lisansı, sınırlılıklar ve bilinen hata örnekleri izlenmelidir.
 
 Fotoğraf için ayrık test verisi, Türk yemeklerinin temsili, sınıflandırma precision/recall/F1, porsiyon/kalori hata dağılımı ve kullanıcı düzeltme sıklığı değerlendirilir. Veri ve ölçüm olmadan doğruluk oranı taahhüt edilmez.
 
-Laboratuvar ML'i opsiyoneldir: etiketli/izinli veri, leakage kontrolü, bağımsız eğitim/test, sınıf dengesi, açıklanabilirlik ve klinik uzman doğrulaması gerekir. Bu kapılar yoksa referans karşılaştırmasının ötesinde iddia üretilmez.
+Laboratuvar ML araştırması uygun, izinli ve bilimsel olarak anlamlı veri bulunması koşuluyla yürütülür. Etiket kalitesi, leakage kontrolü, bağımsız eğitim/test, sınıf dengesi, açıklanabilirlik ve klinik uzman doğrulaması gerekir. Bu koşullar yoksa referans karşılaştırmasının ötesinde iddia üretilmez.
 
 ## Mimari ve güvenlik sınırı
 
-Kaynak/rol/ilişki/izin kararını backend verir, model vermez. AI aktarım amacı ile diyetisyene paylaşım amacı ayrı değerlendirilir. En az veri, kimlik ayıklama, sağlayıcı/yer/retention ve hukuki dayanak [11](11_SECURITY_AND_RELEASE.md)'deki yayın kapısına tabidir.
+Kaynak/rol/ilişki/izin kararını backend verir, model vermez. Yemek fotoğrafının Gemini'ye aktarımı ile tahlilin diyetisyene paylaşımı ayrı amaçlardır. Gemini veri işleme koşulları ve yemek görüntülerinin mahremiyeti açık karardır; tahlillerin harici AI'ya aktarım yasağı korunur. Veri minimizasyonu, sağlayıcı/yer/retention ve hukuki dayanak [11](11_SECURITY_AND_RELEASE.md)'deki yayın kapısına tabidir.
 
-Uygulama öncesi manuel fallback, timeout, izin geri çekme, dosya sahipliği, kullanıcı kontrol/onayı ve yanıltıcı/riskli metin kontrolleri test edilmelidir. Bunlar kabul gereksinimleridir; eğitilmiş model, bilimsel başarı veya gerçekleştirilmiş test sonucu değildir. Açık kararların ana kaynağı [12](12_TEAM_PLAN_AND_DECISIONS.md)'dir.
+Uygulama öncesi manuel devam, zaman aşımı, izin/onay geri çekme, ilişki bitişi, dosya sahipliği, yemek için kullanıcı onayı, tahlil için uzman doğrulaması ve yanıltıcı/riskli metin kontrolleri test edilmelidir. Mobilde tahlil analizi gösterilmemesi ve gerçek belgelerin harici AI'ya gönderilmemesi de doğrulanır. Bunlar kabul gereksinimleridir; eğitilmiş model, bilimsel başarı veya gerçekleştirilmiş test sonucu değildir. Açık kararların ve görevlerin ana kaynağı [12](12_TEAM_PLAN_AND_DECISIONS.md)'dir.

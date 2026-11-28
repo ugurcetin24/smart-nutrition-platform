@@ -1,6 +1,6 @@
 # 07 — Gerçek Flutter ekranları ve mobil davranış
 
-İnceleme tabanı 22.11.2026 / `4f160b3`. Mevcut uygulama açıklamaları kaynak koddan doğrulanmıştır; fiziksel Android/iOS veya yeni test koşusu sonucu değildir. Kesinleşmiş ancak geliştirmesi kalan Profil akışı ayrıca işaretlenmiştir. Ürün kapsamı [01](01_PROJECT_SCOPE.md), HTTP sözleşmesi [06](06_API_CONTRACT.md), sağlık aktarımı [20](20_HEALTH_DATA_SYNC_CONTRACT.md)'dedir.
+İnceleme tabanı 22.11.2026 / `4f160b3`. Mevcut uygulama açıklamaları kaynak koddan doğrulanmıştır; fiziksel Android/iOS veya yeni test koşusu sonucu değildir. Kesinleşmiş ancak geliştirmesi kalan Profil akışı ile 3 Aralık yemek analizi ve tahlil akışları ayrıca işaretlenmiştir. Ürün kapsamı [01](01_PROJECT_SCOPE.md), HTTP sözleşmesi [06](06_API_CONTRACT.md), sağlık aktarımı [20](20_HEALTH_DATA_SYNC_CONTRACT.md)'dedir.
 
 ## Uygulama girişi ve navigasyon
 
@@ -37,9 +37,29 @@ Başvuru ve uzman yetkisi mevcut [06](06_API_CONTRACT.md) kurallarına tabidir. 
 
 ## Gerçek işlev ve önizleme ayrımı
 
-Ana sayfanın hızlı işlemlerinde Öğün ekle ve Su ekle gerçek API kullanır. **Aktivite ekle ve Tahlil ekle önizleme açar, kayıt oluşturmaz.** Manuel aktivite API'sinin bulunması mobil manuel aktivite formunun tamamlandığı anlamına gelmez. Fotoğraftan besin, laboratuvar/OCR, bildirim teslimi, tarif/katalog ve tam kişisel program editörü henüz bağlı mobil akışlar değildir.
+Öğün ve su kaydı gerçek API kullanır. Güncel Günüm ekranında fotoğrafla öğün ekleme henüz kullanıma açık değildir. Önizlemeler ve manuel aktivite API'sinin varlığı gerçek mobil form teslimi sayılmaz. Fotoğraftan besin ve aşağıdaki tahlil yükleme/geçmiş/paylaşım akışı henüz bağlı değildir; bildirim teslimi, tarif/katalog ve tam kişisel program editörü de tamamlanmış sayılmaz.
 
 Kaynakta dashboard_demo_data gibi sentetik yardımcı dosyalar vardır; dosya varlığı gerçek ekranda kullanıldığını kanıtlamaz. Gerçek veri yükleme hatasında sentetik kayda veya sahte başarıya dönülmez. Hedefin programdan mı kişisel tercihten mi geldiği ayrılır; atanmış hedefler düzenlenmez.
+
+## Planlanan kamera/galeri ve yemek onayı
+
+**Durum: 3 Aralık 2026 çalışmaları için kesinleşmiş ürün kararı; geliştirme ve uygulama doğrulaması gerekli.**
+
+- Flutter kamera veya galeriden yemek görüntüsü alır. Gemini API çağrısı ASP.NET Core backend'de yapılır; API anahtarı mobil veya web istemcisine verilmez.
+- Tekli/çoklu yemek tanıma ve tahmini porsiyon/gramaj önerileri kullanıcıya sunulur. Enerji, protein, karbonhidrat ve yağ doğrulanmış katalogdan hesaplanır; Gemini'nin besin değeri tahminleri kesin veri değildir.
+- Kullanıcı tanınan yemekleri, eşleştirilen besinleri ve porsiyonları düzenleyebilir; yemek ekleyip çıkarabilir. Doğru öneriyi değiştirmeden onaylamak mümkündür.
+- Kullanıcı açıkça onaylamadan MealLog oluşturulmaz. Mevcut öğün kayıtları, kişisel hedefler ve Dashboard altyapısı korunur; hata veya zaman aşımında manuel kayıt sürer.
+
+## Planlanan Diyetisyenim → Tahlillerim
+
+**Durum: onaylı mobil hedef; çalışan belge yükleme veya tahlil API entegrasyonu yok.** Bu ad bir ürün navigasyon hedefidir; yeni route sözleşmesi değildir.
+
+- Danışan PDF, fotoğraf veya ekran görüntüsü yükler; yüklenen belgelerin geçmişini ve işlem durumunu görür, paylaşımını yönetir.
+- Mobilde OCR sonucu, referans aralığı değerlendirmesi veya AI destekli tahlil analizi gösterilmez. Manuel tahlil veri girişi, sonuç düzeltme/doğrulama ve uzman değerlendirme notları React web panelindedir ([08](08_WEB_SPEC.md)).
+- Belgenin aktif ve yetkili diyetisyene açılması bağımsız paylaşım izni ve tahlile özel açık onay gerektirir. İzin veya açık onay geri çekildiğinde ya da ilişki sona erdiğinde diyetisyenin belge ve sonuç erişimi kapanır.
+- Belge yüklemek, tahlili paylaşmak ve OCR sonucunun uzman tarafından doğrulanması ayrı işlemlerdir. Gerçek tahlil belgeleri Gemini veya başka harici AI servislerine gönderilmez.
+
+Yemek/tahlil işleme ayrıntıları [10](10_AI_SPEC.md), güvenlik [11](11_SECURITY_AND_RELEASE.md), açık teknik kararlar ve M7–M14/U7–U14 görevleri [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Kesin dosya sınırları, durumlar ve API/DTO biçimleri bu ekran gereksinimleriyle belirlenmez.
 
 ## Oturum ve parola sıfırlama
 

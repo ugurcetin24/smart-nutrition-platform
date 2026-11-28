@@ -39,6 +39,18 @@
 
 Güncel web aktivite/laboratuvar görünümleri sentetik önizleme bileşenleridir; gerçek diyetisyen sağlık/aktivite paylaşımı veya laboratuvar API'si yoktur. Tarif, bildirim teslimi, PDF raporu, kapsamlı kullanıcı/şikâyet/katalog/audit yönetimi tamamlanmış panel sayılmaz.
 
+## Planlanan diyetisyen tahlil paneli
+
+**Durum: 3 Aralık 2026 çalışmaları için kesinleşmiş ürün kararı; React/backend geliştirmesi ve doğrulaması gerekli.** Mobildeki **Diyetisyenim → Tahlillerim** yüklemeleri bu panele ulaşacaktır; mevcut sentetik laboratuvar görünümü bu akışın teslimi değildir.
+
+- Erişim güncel uzman doğrulaması, aktif danışan ilişkisi, bağımsız tahlil paylaşım izni ve geri çekilmemiş tahlile özel açık onay gerektirir. İzin/onay geri çekilince veya ilişki bitince yeni belge/sonuç okumaları ve uzman işlemleri kapanır; hassas görünüm temizlenir.
+- Diyetisyen orijinal PDF/fotoğraf/ekran görüntüsünü ve çıkarılan sonuçları birlikte görüntüler. Test adı, değer, birim, referans aralığı, belgedeki mevcut durum işareti ve tarih incelenebilir; yanlış çıkarımlar düzeltilip doğrulanabilir.
+- OCR çıktısı uzman doğrulaması olmadan doğrulanmış tahlil sonucu sayılmaz. Manuel tahlil veri girişi ve uzman değerlendirme notları web panelinde bulunur; uzman doğrulaması danışanın paylaşım izni veya açık onayının yerine geçmez.
+- Referans karşılaştırmasını backend yapar. Eksik/geçersiz referans veya birimde kesin değerlendirme sunulmaz; belgedeki durum işareti sunucunun karşılaştırmasıyla karıştırılmaz. Sistem hastalık teşhisi, tedavi kararı veya kesin klinik yorum üretmez.
+- Geçmiş tahlil karşılaştırmaları ürün gereksinimidir; aynı analit ve uyumlu birimler korunur. Düzeltilmiş rapora ait eski değerlendirme güncelmiş gibi gösterilmez.
+
+İlk belge hedefi e-Nabız'dır; bütün laboratuvar formatları aynı varsayılmaz. Metin katmanlı PDF için doğrudan metin/tablo ayrıştırma, taranmış PDF ve fotoğraf için yerel OCR kullanılır. Araçlar ve işleme akışı [10](10_AI_SPEC.md), açık API/şema/durum kararları [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Bu gereksinimler yeni route veya DTO tanımlamaz.
+
 ## İstek ve etkileşim davranışı
 
 Web same-origin HTTPS cookie taşır; JWT login/refresh'i kullanmaz. CSRF ve hesap özeti yalnız geçici bellektedir. Cookie/CSRF/hesap taşıma ayrıntısı ve süreler [06](06_API_CONTRACT.md)'dadır.

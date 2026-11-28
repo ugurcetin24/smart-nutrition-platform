@@ -15,7 +15,7 @@ Bu belge güvenlik ve gerçek veri/yayın kapılarının ana kaynağıdır. HTTP
 | Kategori izinleri | Kendi aktif ilişkisinde verir/geri çeker | Kendi ilişkisinin izin durumunu okur, danışan adına değiştiremez | Danışan adına açamaz |
 | Sağlık bağlantısı/örnek/aktivite | Yalnız client JWT ve kendi profil bağlamı | U3 yolları paylaşım kategorisiyle açılmaz | Erişim yok |
 | Uzman incelemesi/onayı | Kendi başvuru durumu | Kendi başvuru durumu | Yalnız MFA web oturumu |
-| Laboratuvar/ConsentRecord | Planlanan kendi erişimi | Planlanan kategori izni + ayrıca uygun ve geri çekilmemiş açık onay | Varsayılan erişim yok |
+| Laboratuvar belgesi/paylaşımı | Planlanan mobil yükleme, belge geçmişi, işlem durumu ve paylaşım yönetimi; OCR/referans/AI analizi gösterilmez | Planlanan onaylı uzman + aktif ilişki + bağımsız tahlil izni + geri çekilmemiş tahlile özel açık onay; belge/sonuç inceleme, düzeltme/doğrulama, manuel giriş ve notlar webde | Varsayılan erişim yok |
 
 Tek User.role ile ClientProfile/DietitianProfile yetkisi farklıdır. X-Profile-Context başlığı kimlik veya uzman onayı üretmez. Pending/ended ilişki sağlık verisi açmaz; uzman doğrulaması kaybı yeni uzman erişimini kapatır.
 
@@ -28,6 +28,10 @@ Beş mevcut kategori birbirini açmaz; eksik/false satır kapalıdır. Otomatik 
 water_logs yalnız su tüketimi okumasıdır; kişisel hedef, başka kategori, yazma veya genel sağlık paylaşımı vermez. İzin geri çekilince su kayıt/toplam/geçmişi yeni okumada kapanır, diğer kategoriler korunur. Su DTO ve gün sınırlarının tek kaynağı [06](06_API_CONTRACT.md)'dır.
 
 Mevcut beş kategoride consentRecordId null'dır; ConsentRecord/tahlil açık onay uygulaması henüz yoktur. Kategori izni, hukuki işleme şartı/açık rıza, AI'ya aktarım amacı ve OS sağlık izni birbirinin yerine geçmez.
+
+Planlanan tahlil paylaşımı mevcut kategorilerden biriyle veya belge yükleme eylemiyle kendiliğinden açılmaz. Her belge/çıkarım/geçmiş karşılaştırması okumasında ve uzman yazma/doğrulama işleminde sunucu güncel uzmanlığı, aktif ilişkiyi, bağımsız paylaşım iznini ve tahlile özel açık onayı denetler. İzin ya da açık onay geri çekilince veya ilişki bitince sonraki uzman erişimi kapanır; dosya bağlantıları ve ilgili görünüm de aynı yetki sınırına tabidir. Bu gereksinim yeni kategori kodu veya ConsentRecord şeması tanımlamaz.
+
+Danışanın belge yükleme/paylaşım onayı, yemek analizini MealLog'a kaydetme onayı ve diyetisyenin OCR sonucunu doğrulaması ayrı amaçlardır. Tahlil OCR çıktısı uzman doğrulamasından önce doğrulanmış sonuç sayılmaz; uzman doğrulaması danışanın paylaşım izni veya tahlile özel açık onayının yerine geçmez. Mobilde OCR sonucu, referans değerlendirmesi veya AI destekli tahlil analizi gösterilmez.
 
 ## Kimlik, oturum ve sırlar
 
@@ -57,11 +61,15 @@ Veri envanteri her veri türünün amacı, hukuki dayanağı, saklama süresi, e
 
 Hesap silme, veri indirme/silme talebi, yedekten silme, retention/anonimleştirme, onay politika sürümü/kanıtı ve istisnai destek erişimi açık kararlardır. İstisnai Admin sağlık erişimi varsa gerekçeli, sınırlı ve audit'li tasarlanmalıdır; mevcut varsayılan engel kaldırılmaz.
 
-Fotoğraf/PDF/OCR için MIME + gerçek içerik kontrolü, boyut, zararlı içerik taraması, private storage, yetkili süreli dosya erişimi ve silme politikası gereklidir. Sağlayıcı/retention/yurt dışı aktarım ayrıca onaylanır. AI veri minimizasyonu ve kullanıcı onayı [10](10_AI_SPEC.md)'dadır.
+Fotoğraf/PDF/OCR için MIME + gerçek içerik kontrolü, boyut, zararlı içerik taraması, private storage, yetkili süreli dosya erişimi ve silme politikası gereklidir. Sağlayıcı/retention/yurt dışı aktarım ayrıca onaylanır. Veri minimizasyonu, yemekte kullanıcı onayı ve tahlilde uzman doğrulaması [10](10_AI_SPEC.md)'dadır.
+
+Yemek görüntüleri için Gemini API yalnız ASP.NET Core backend üzerinden çağrılır; API anahtarı mobil/web istemcisine verilmez. Gemini'nin veri işleme koşulları, yemek fotoğraflarının mahremiyeti ve kota/maliyet sınırları açık teknik kararlardır; sağlayıcı seçimi bu konuların çözüldüğü anlamına gelmez.
+
+**Gerçek tahlil belgeleri Gemini veya başka harici AI servislerine gönderilmez.** Metin katmanlı PDF yerel metin/tablo ayrıştırmasına, fotoğraf/ekran görüntüsü ve taranmış PDF yerel OCR'ye tabidir. Kesin araç/sürüm, belge saklama yöntemi/süresi/silme politikası ve dosya türü/boyutu/PDF sayfa sınırları araştırma sonrasında belirlenir. Sentetik test verisi kuralı korunur; gerçek sağlık belgesi seed/test/log içine konmaz.
 
 ## Doğrulama ve yayın kapıları
 
-Kabul testleri: rol/kaynak/FK izolasyonu; kategori matrisi/geri çekme; tek aktif ilişki/program yarışları; snapshot/sürüm/rollback; reset–login–refresh ve MFA tekrar kullanımı; CSRF/Origin; istemci geç yanıt/hassas görünüm temizliği; kaynak/birim/örtüşme; gerçek Android/iOS OS izinleri; planlanan AI/OCR/dosya onayı ve PDF yetkisi.
+Kabul testleri: rol/kaynak/FK izolasyonu; kategori matrisi/geri çekme; tek aktif ilişki/program yarışları; snapshot/sürüm/rollback; reset–login–refresh ve MFA tekrar kullanımı; CSRF/Origin; istemci geç yanıt/hassas görünüm temizliği; kaynak/birim/örtüşme; gerçek Android/iOS OS izinleri; planlanan yemek onayı, tahlil paylaşım onayı/uzman doğrulaması, dosya/PDF yetkisi ve ilişki bitişinde erişimin kapanması. Gemini anahtarının istemciye verilmemesi, gerçek tahlillerin harici AI'ya gönderilmemesi ve mobilde tahlil analizi gösterilmemesi ayrıca doğrulanmalıdır.
 
 Bu liste test gereksinimidir. Sentetik API/DB testi fiziksel sensör/cihaz, React DOM testi tarayıcı, tarayıcı testi Flutter doğrulaması sayılmaz. Mevcut test kanıtları ve açık eksikler [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir.
 
@@ -71,7 +79,7 @@ Bu liste test gereksinimidir. Sentetik API/DB testi fiziksel sensör/cihaz, Reac
 - [ ] Gerçek dağıtım HTTPS/secret/anahtar, güvenilir proxy ve çok örnekli ortak hız limiti.
 - [ ] Üretim e-posta teslimi, yedek/geri yükleme, izleme/çökme/hata/audit ve kesinti temizliği.
 - [ ] Gerçek ortam oturum/reset/Admin MFA, kategori/tahlil geri çekme ve dosya/cache/PDF erişim kontrolü.
-- [ ] AI/OCR onayı, belirsizlik ve manuel devam; bilimsel iddia olmaması.
+- [ ] Yemekte kullanıcı onayı ve manuel devam; tahlilde paylaşım onayı/uzman doğrulaması, belirsizlik ve bilimsel iddia olmaması.
 - [ ] İmzalı release, paket kimliği, ikon/görseller, destek kanalı; erişilebilirlik ve iki tema doğrulaması.
 
 Sentetik demo, gerçek kullanıcıya açılış ve mağaza yayını ayrı aşamalardır; bu belge güncellemesi hiçbir yayın kapısını tamamlamaz.
