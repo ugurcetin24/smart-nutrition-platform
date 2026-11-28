@@ -90,7 +90,6 @@
 .comparison-nutrients > div { padding: 12px; border-radius: 9px; background: var(--brand-soft); }
 .comparison-columns { margin-block: 16px; }
 .comparison-columns > section { border: 1px solid var(--border); padding: 16px; border-radius: 10px; }
-@media (min-width: 1300px) { .nutrition-panel:has(> .nutrition-editor) { display: grid; grid-template-columns: minmax(0, 1fr) 500px; gap: 0 20px; align-items: start; } .nutrition-panel:has(> .nutrition-editor) > .nutrition-editor { grid-column: 2; grid-row: 1 / span 20; margin-top: -154px; position: sticky; top: 16px; max-height: calc(100dvh - 127px); overflow-y: auto; } .nutrition-panel:has(> .nutrition-editor) > :not(.nutrition-editor) { grid-column: 1; } .nutrition-panel:has(> .nutrition-editor) > .page-heading { grid-column: 1 / -1; } .nutrition-panel:has(> .nutrition-editor) .plan-meals { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) {
   .nutrition-panel > .page-heading { padding: 18px; }
   .nutrition-panel > .expert-pagination > .button, .nutrition-card > .expert-pagination > .button { width: 100%; }
@@ -120,7 +119,6 @@
 .program-content-disclosure[open] { border-top: 1px solid var(--border); }
 .compact-program-panel .nutrition-card > .expert-pagination { padding: 14px 18px; gap: 8px; }
 .compact-program-panel .nutrition-card > .expert-pagination .button { flex: 1 1 140px; font-size: 17px; padding-inline: 10px; }
-@media (min-width: 1300px) { .compact-program-panel:has(> .nutrition-editor) .nutrition-programs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) { .compact-program-panel .nutrition-programs-grid { grid-template-columns: minmax(0, 1fr); } }
 
 .program-more-content { border-top: 1px solid var(--border); padding-bottom: 16px; }
@@ -133,7 +131,6 @@
  .program-page-actions > button:first-of-type { position: absolute; top: -80px; right: 0; }
  .compact-program-panel .nutrition-programs-grid { margin-top: 0; }
  .compact-program-panel .nutrition-card > .expert-pagination { padding-top: 4px; }
- .compact-program-panel:has(> .nutrition-editor) .nutrition-card .card-header h3 { font-size: 21px; }
 }
 @media (max-width: 700px) { .program-card-icon { width: 72px; height: 72px; } .program-page-label { width: 100%; } .compact-program-panel .nutrition-card .card-header h3 { font-size: 22px; } }
 
@@ -148,4 +145,144 @@
 
 .compact-program-panel .nutrition-card > .card-header { border-radius: 13px 13px 0 0; }
 .compact-program-panel .nutrition-card > .expert-pagination { background: var(--surface); border-radius: 0 0 13px 13px; }
-@media (min-width: 1300px) { .compact-plan-editor { max-height: calc(100dvh - 127px); } }
+
+/* The editor owns the content canvas; the surrounding workspace navigation stays. */
+.nutrition-panel.is-editing { display: block; min-width: 0; }
+.nutrition-panel [hidden] { display: none !important; }
+.reference-plans:has(.plan-workbench) > .dashboard-heading,
+.reference-plans:has(.plan-workbench) > .feature-client-toolbar,
+.reference-plans:has(.plan-workbench) > .feature-client-pages,
+.reference-plans:has(.plan-workbench) .feature-client-caption { display: none; }
+.nutrition-editor.plan-workbench { padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; max-width: 100%; min-width: 0; }
+.plan-workbench .plan-workbench-fields { margin: 0; padding: 0; border: 0; min-width: 0; }
+.plan-workbench button, .plan-workbench input, .plan-workbench textarea, .plan-workbench select { font-family: inherit; }
+.plan-workbench button { cursor: pointer; }
+.plan-workbench button:disabled { cursor: not-allowed; }
+.plan-workbench :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.plan-icon-slot { display: inline-block; width: 18px; height: 18px; flex: 0 0 18px; }
+.plan-return { display: inline-flex; align-items: center; gap: 6px; padding: 8px 0; margin: 0 0 14px; border: 0; background: transparent; color: var(--text-secondary); text-align: left; font-size: 13px; }
+.plan-editor-heading { margin-bottom: 20px; min-width: 0; }
+.plan-editor-heading h2 { font: 800 30px/1.3 var(--font-heading); letter-spacing: -.7px; margin: 0 0 4px; }
+.plan-workbench .plan-title-input { display: block; width: min(100%, 440px); padding: 5px 0; min-height: 36px; border: 0; border-bottom: 1px dashed var(--border-strong); border-radius: 0; color: var(--text-primary); background: transparent; font-size: 16px; font-weight: 600; }
+.plan-editor-heading > p { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--text-secondary); font-size: 12px; margin-block: 10px; }
+.plan-editor-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0 10px; }
+.plan-editor-actions > .button { font-size: 13px; min-height: 40px; padding: 9px 15px; gap: 8px; }
+.plan-save-state { color: var(--brand-primary); font-size: 12px; font-weight: 600; }
+.plan-editor-heading > small { display: block; color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+.plan-workbench .plan-editor-note { padding: 14px 18px; margin-block: 18px; border-radius: 12px; background: var(--brand-soft); font-size: 13px; }
+.plan-workbench-card { padding: 22px; margin-bottom: 18px; border: 1px solid var(--border); border-radius: var(--radius-large); background: var(--surface); box-shadow: var(--shadow-card); min-width: 0; }
+.plan-workbench-card h3 { font: 800 17px/1.4 var(--font-heading); margin: 0 0 14px; }
+.plan-goals > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.plan-workbench .form-field { min-width: 0; margin: 0; }
+.plan-workbench .form-field > label { font-size: 12px; margin-bottom: 8px; line-height: 1.5; }
+.plan-workbench input[type='date']::-webkit-calendar-picker-indicator { opacity: 0; }
+.plan-workbench select { appearance: none; padding-right: 28px; }
+@media (min-width: 1201px) { .plan-goals .form-field > label { min-height: 36px; } }
+.plan-workbench .form-field small { font-size: inherit; font-weight: 400; }
+.plan-workbench input:not([type='search']):not(.plan-title-input), .plan-item-form select { width: 100%; min-width: 0; min-height: 42px; padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface); color: var(--text-primary); font-size: 13px; }
+.plan-workbench .plan-goals > p, .plan-daily-summary > p { font-size: 11px; line-height: 1.6; color: var(--text-secondary); margin: 10px 0 0; }
+.plan-daily-summary > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.plan-daily-summary h3 { margin: 0; }
+.plan-summary-days { display: flex; flex-shrink: 0; padding: 4px; gap: 2px; border-radius: 14px; background: var(--surface-page); }
+.plan-summary-days > button { min-height: 36px; min-width: 36px; padding: 8px; border: 0; border-radius: 11px; background: transparent; color: var(--text-secondary); font-size: 12px; }
+.plan-summary-days > button[aria-pressed='true'] { background: var(--brand-primary); color: var(--on-brand); }
+.plan-summary-body { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 22px; align-items: center; }
+.plan-summary-empty { text-align: center; color: var(--text-muted); }
+.plan-empty-ring { display: grid; place-items: center; width: 120px; height: 120px; border: 15px solid var(--surface-subtle); outline: 1px solid var(--border); border-radius: 50%; margin: 0 auto 12px; font-size: 12px; font-weight: 600; }
+.plan-summary-empty small { display: block; font-size: 10px; }
+.plan-summary-metrics { display: grid; gap: 14px; }
+.plan-summary-metrics > div > div:first-child { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-size: 12px; }
+.plan-summary-metrics strong { font-weight: 500; }
+.plan-summary-metrics span { color: var(--text-muted); font-size: 11px; }
+.plan-empty-track { height: 10px; border-radius: 8px; background: var(--surface-subtle); }
+.plan-work-area { display: grid; grid-template-columns: minmax(230px, .28fr) minmax(0, .72fr); gap: 18px; align-items: start; min-width: 0; }
+.plan-suggestion-panel { padding: 20px; }
+.plan-search { display: flex; align-items: center; gap: 8px; padding: 0 10px; min-height: 44px; border: 1px solid var(--border-strong); border-radius: 14px; }
+.plan-search input { width: 100%; min-width: 0; padding: 10px 0; border: 0; color: var(--text-primary); background: transparent; font-size: 13px; }
+.plan-suggestion-filters { display: flex; flex-wrap: wrap; gap: 5px; margin-block: 10px 16px; }
+.plan-suggestion-filters button { padding: 6px 10px; min-height: 32px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text-primary); font-size: 11px; }
+.plan-suggestion-filters [aria-pressed='true'] { background: var(--brand-primary); border-color: var(--brand-primary); color: var(--on-brand); }
+.plan-selected-cell { display: flex; gap: 8px; align-items: center; color: var(--text-secondary); font-size: 11px; }
+.plan-selected-cell strong { display: block; color: var(--text-primary); margin-top: 4px; font-size: 12px; }
+.plan-panel-caption { font-size: 11px; line-height: 1.6; color: var(--text-muted); margin: 12px 0; }
+.plan-reusable-list { list-style: none; margin: 12px 0; padding: 0; max-height: 290px; overflow-y: auto; overflow-wrap: anywhere; scrollbar-width: thin; }
+.plan-reusable-list li { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.plan-food-slot { flex: 0 0 32px; width: 32px; height: 32px; background: var(--brand-soft); border-radius: 50%; }
+.plan-reusable-list li > div { min-width: 0; flex: 1; }
+.plan-reusable-list strong { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; font-weight: 600; }
+.plan-reusable-list small { display: block; margin-top: 4px; font-size: 10px; color: var(--text-secondary); }
+.plan-reusable-list li > div > div { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; }
+.plan-reusable-list button { min-height: 30px; padding: 2px 0; border: 0; background: transparent; color: var(--brand-primary); font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.plan-suggestion-panel > .button { width: 100%; min-height: 40px; font-size: 12px; padding-inline: 8px; }
+.plan-item-form { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); }
+.plan-item-form h4 { margin: 0 0 14px; font: 800 14px/1.5 var(--font-heading); }
+.plan-item-form > label { display: block; margin: 12px 0 6px; font-size: 11px; font-weight: 600; }
+.plan-item-location { display: grid; gap: 10px; }
+.plan-item-location label { display: grid; gap: 5px; font-size: 11px; }
+.plan-workbench .plan-item-form textarea { font-size: 12px; line-height: 1.6; padding: 10px; border-radius: 12px; }
+.plan-item-form > p { font-size: 10px; color: var(--text-secondary); line-height: 1.6; margin-top: 10px; }
+.plan-item-form > .button { width: 100%; min-height: 40px; font-size: 11px; margin-top: 14px; }
+.plan-work-area > .plan-workbench-card { margin-bottom: 0; }
+.plan-work-area > section { padding: 20px; }
+.plan-work-area > section > header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.plan-work-area > section > header h3 { margin: 0; }
+.plan-work-area > section > header > div { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; }
+.plan-work-area > section > header label { display: grid; gap: 4px; font-size: 10px; }
+.plan-workbench .plan-work-area > section > header select { min-height: 34px; padding: 5px 8px; font-size: 11px; border-radius: 10px; }
+.plan-work-area > section > header .button { min-height: 34px; padding: 7px 10px; font-size: 11px; gap: 5px; }
+.plan-everyday { margin: 14px 0; padding: 10px 12px; background: var(--surface-page); border: 1px solid var(--border); border-radius: 12px; }
+.plan-everyday > summary { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; cursor: pointer; padding-block: 4px; list-style: none; }
+.plan-everyday > summary::-webkit-details-marker { display: none; }
+.plan-everyday > p, .plan-grid-hint { font-size: 11px; line-height: 1.6; color: var(--text-secondary); margin-block: 8px; }
+.plan-everyday > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.plan-everyday > div > section { min-width: 0; padding: 6px; border-radius: 10px; border: 1px solid var(--border); }
+.plan-week-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding-bottom: 12px; }
+.plan-week-table { width: 100%; min-width: 1060px; border-spacing: 6px; table-layout: fixed; border-collapse: separate; }
+.plan-week-table th { padding: 0; text-align: left; vertical-align: top; font-size: 11px; font-weight: 600; border: 0; background: transparent; }
+.plan-week-table tr > th:first-child { width: 64px; }
+.plan-week-table tbody th { padding-top: 14px; }
+.plan-week-table thead button { width: 100%; padding: 12px 4px; min-height: 40px; border: 0; border-radius: 13px; background: var(--surface-page); color: var(--text-primary); font-size: 11px; font-weight: 700; }
+.plan-week-table thead [aria-pressed='true'] { background: var(--brand-primary); color: var(--on-brand); }
+.plan-week-table td { height: 140px; min-width: 0; padding: 5px; vertical-align: top; border: 1px solid transparent; border-radius: 13px; background: var(--surface-page); }
+.plan-week-table td.is-selected { border-color: var(--brand-primary); box-shadow: 0 0 0 1px var(--brand-primary); }
+.plan-cell-select { width: 100%; min-height: 32px; padding: 7px 4px; border: 0; border-radius: 8px; background: transparent; color: var(--text-muted); font-size: 10px; text-align: left; }
+.plan-cell-select[aria-pressed='true'] { color: var(--brand-primary); background: var(--brand-soft); font-weight: 700; }
+.plan-cell-empty { display: block; padding: 14px 6px; font-size: 10px; line-height: 1.6; color: var(--text-muted); }
+.plan-suggestion-card { display: block; width: 100%; margin: 4px 0; padding: 8px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text-primary); text-align: left; overflow-wrap: anywhere; }
+.plan-suggestion-card strong { display: block; white-space: pre-wrap; font-size: 11px; line-height: 1.5; font-weight: 500; }
+.plan-suggestion-card > span { display: block; margin-top: 5px; font-size: 10px; line-height: 1.5; color: var(--text-secondary); }
+.plan-suggestion-card small { display: inline-block; margin-top: 5px; padding: 2px 4px; border-radius: 5px; background: var(--brand-soft); font-size: 9px; color: var(--brand-primary); }
+.plan-suggestion-card[aria-pressed='true'] { border-color: var(--brand-primary); }
+.plan-shared-cards { opacity: .85; }
+.plan-alternatives { border: 1px dashed var(--border-strong); border-radius: 10px; padding: 5px; margin-block: 6px; }
+.plan-alternatives > small { display: block; font-size: 9px; line-height: 1.6; color: var(--brand-primary); }
+.plan-or { display: block; text-align: center; font-size: 9px; color: var(--text-muted); }
+@media (max-width: 1200px) {
+  .plan-goals > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plan-daily-summary > header { flex-wrap: wrap; }
+  .plan-work-area { grid-template-columns: 230px minmax(0, 1fr); gap: 14px; }
+}
+@media (max-width: 900px) {
+  .plan-work-area { grid-template-columns: minmax(0, 1fr); }
+  .plan-suggestion-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 22px; align-items: start; }
+  .plan-suggestion-panel > * { grid-column: 1; }
+  .plan-suggestion-panel > .plan-item-form { grid-column: 2; grid-row: 1 / span 9; margin: 0; padding: 0 0 0 22px; border-top: 0; border-left: 1px solid var(--border); }
+}
+@media (max-width: 600px) {
+  .plan-workbench-card { padding: 16px; border-radius: 18px; }
+  .plan-editor-heading h2 { font-size: 24px; }
+  .plan-editor-actions { gap: 8px; }
+  .plan-editor-actions .button { flex: 1 1 135px; font-size: 12px; }
+  .plan-goals > div { grid-template-columns: minmax(0, 1fr); }
+  .plan-summary-days { width: 100%; flex-shrink: 1; gap: 0; overflow-x: auto; }
+  .plan-summary-days > button { flex: 1; min-width: 34px; padding: 8px 4px; font-size: 10px; }
+  .plan-summary-body { grid-template-columns: 80px minmax(0, 1fr); gap: 12px; }
+  .plan-empty-ring { width: 72px; height: 72px; border-width: 9px; font-size: 10px; }
+  .plan-summary-empty small { font-size: 9px; }
+  .plan-summary-metrics > div > div:first-child { flex-wrap: wrap; gap: 2px; font-size: 11px; }
+  .plan-summary-metrics span { font-size: 10px; }
+  .plan-suggestion-panel { display: block; }
+  .plan-suggestion-panel > .plan-item-form { padding: 18px 0 0; margin-top: 18px; border-left: 0; border-top: 1px solid var(--border); }
+  .plan-work-area > section { padding: 14px; }
+  .plan-work-area > section > header > div { width: 100%; justify-content: space-between; }
+}

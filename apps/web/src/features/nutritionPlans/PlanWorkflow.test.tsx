@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Link, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
@@ -50,20 +50,18 @@ describe('program draft protection', () => {
     expect(screen.queryByLabelText('Program başlığı')).not.toBeInTheDocument()
     await waitFor(() => expect(edit).toHaveFocus())
   })
-  it('preserves editing across refresh, history, paging and a failed save', async () => {
+  it('dedicates the page to editing and preserves the draft across revalidation and a failed save', async () => {
     const request = vi.spyOn(globalThis, 'fetch').mockImplementation(async (path, options) => {
       if (options?.method === 'PATCH') return new Response(null, { status: 500 })
       if (String(path).includes('/versions?')) return Response.json({ items: [], totalCount: 0 })
       return list([plan()], 11)
     })
     const { user } = setup(); await changeTitle(user)
-    await user.click(screen.getByRole('button', { name: 'Programları yeniden kontrol et' }))
+    act(() => window.dispatchEvent(new Event('focus')))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Yeni sürüm kaydet' })).toBeEnabled())
     expect(screen.getByLabelText('Program başlığı')).toHaveValue('Değişen taslak')
-    await user.click(await screen.findByRole('button', { name: 'Sürüm geçmişini aç' }))
-    expect(await screen.findByRole('region', { name: 'Program sürüm geçmişi' })).toBeVisible()
-    await user.click(screen.getByRole('button', { name: 'Sonraki programlar sayfası' }))
-    await screen.findByRole('button', { name: 'Önceki programlar sayfası' })
-    expect(screen.getByLabelText('Program başlığı')).toHaveValue('Değişen taslak')
+    expect(screen.queryByRole('button', { name: 'Sürüm geçmişini aç' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sonraki programlar sayfası' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Yeni sürüm kaydet' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('doğrulanamadı')
     expect(screen.getByLabelText('Program başlığı')).toHaveValue('Değişen taslak')
@@ -74,7 +72,7 @@ describe('program draft protection', () => {
       ? Response.json(plan({ title: 'Değişen taslak', versionNumber: 2 })) : list())
     const { user } = setup(); await changeTitle(user)
     const event = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(event); expect(event.defaultPrevented).toBe(true)
-    await user.click(screen.getByRole('button', { name: 'Yeni program oluştur' })); expect(screen.getByRole('alertdialog')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Hedef Sentetik Ada · Programlara dön' })); expect(screen.getByRole('alertdialog')).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Düzenlemeye dön' }))
     await user.click(screen.getByRole('button', { name: 'Yeni sürüm kaydet' }))
     await screen.findByText('Yeni program sürümü kaydedildi.')
@@ -107,6 +105,52 @@ describe('program draft protection', () => {
 })
 
 describe('weekly plan editing', () => {
+  it('selects a cell with the keyboard, adds, edits and removes an item without multiplying every-day recommendations', async () => {
+    const initial = plan()
+    initial.items.push({ ...initial.items[0]!, id: crypto.randomUUID(), dayOfWeek: null, mealType: 'lunch', description: 'Ortak öneri', alternativeGroupId: null, sortOrder: 2 })
+    const save = vi.fn(async (_value: PlanContentRequest) => {})
+    const user = userEvent.setup()
+    render(<NutritionPlanEditor initial={initial} busy={false} onSave={save} onCancel={() => {}} />)
+    const cell = screen.getByRole('button', { name: 'Salı Akşam hücresini seç' })
+    cell.focus(); await user.keyboard('{Enter}')
+    expect(cell).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('heading', { name: 'Salı · program özeti' })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Öğün önerisi ekle' }))
+    fireEvent.change(screen.getByLabelText('Öğün 4 açıklaması'), { target: { value: 'Ek akşam önerisi' } })
+    fireEvent.change(screen.getByLabelText('Öğün 4 miktar önerisi (isteğe bağlı)'), { target: { value: '½ kase veya ihtiyaca göre' } })
+    await user.click(screen.getByRole('button', { name: 'Yeni sürüm kaydet' }))
+    expect(save.mock.calls[0]![0].items.filter(row => row.dayOfWeek === null)).toHaveLength(1)
+    expect(save.mock.calls[0]![0].items[3]).toMatchObject({ dayOfWeek: 2, mealType: 'dinner', recommendedQuantity: '½ kase veya ihtiyaca göre' })
+    await user.click(screen.getByRole('button', { name: 'Öğün 4 önerisini kaldır' }))
+    await user.click(screen.getByRole('button', { name: 'Yeni sürüm kaydet' }))
+    expect(save.mock.calls[1]![0].items).toHaveLength(3)
+    expect(save.mock.calls[1]![0].items.some(row => row.dayOfWeek === 2)).toBe(false)
+    expect(screen.getByText('Veri yok')).toBeVisible()
+    expect(screen.getAllByText('Besin değeri yok')).toHaveLength(4)
+  })
+  it('searches existing suggestions and reuses an entire alternative group in the selected cell', async () => {
+    const save = vi.fn(async (_value: PlanContentRequest) => {})
+    const user = userEvent.setup()
+    render(<NutritionPlanEditor initial={plan()} busy={false} onSave={save} onCancel={() => {}} />)
+    fireEvent.change(screen.getByLabelText('Öneri ara'), { target: { value: 'bulunmayan' } })
+    expect(screen.getByRole('list', { name: 'Mevcut öneriler' })).toBeEmptyDOMElement()
+    fireEvent.change(screen.getByLabelText('Öneri ara'), { target: { value: 'seçenek' } })
+    await user.click(screen.getByRole('button', { name: 'Perşembe Öğle hücresini seç' }))
+    const options = within(screen.getByRole('list', { name: 'Mevcut öneriler' }))
+    expect(options.getByText(/Birini seçin/)).toBeVisible()
+    await user.click(options.getByRole('button', { name: 'Grubu ekle' }))
+    await user.click(screen.getByRole('button', { name: 'Yeni sürüm kaydet' }))
+    const copied = save.mock.calls[0]![0].items.filter(row => row.dayOfWeek === 4)
+    expect(copied).toHaveLength(2)
+    expect(copied.every(row => row.mealType === 'lunch')).toBe(true)
+    expect(copied[0]!.alternativeGroupId).toBe(copied[1]!.alternativeGroupId)
+    expect(copied[0]!.alternativeGroupId).not.toBe(group)
+  })
+  it('locks day, cell, copy, suggestion and navigation actions for an in-flight save', () => {
+    render(<NutritionPlanEditor initial={plan()} busy onSave={async () => {}} onCancel={() => {}} onPrint={() => {}} onCopy={() => {}} />)
+    for (const button of screen.getAllByRole('button')) expect(button).toBeDisabled()
+    expect(screen.getByLabelText('Program başlığı')).toBeDisabled()
+  })
   it('copies all daily alternatives using independent row/group identities and preserves the source order', async () => {
     const save = vi.fn(async (_value: PlanContentRequest) => {})
     render(<NutritionPlanEditor initial={plan()} busy={false} onSave={save} onCancel={() => {}} />)

@@ -82,6 +82,96 @@ async function fits(page: Page) {
   expect(escapedCards).toEqual([])
 }
 
+for (const width of [1440, 1280, 768, 390]) {
+  test(`program editor canvas and version workflow at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 })
+    const errors = await fixtures(page)
+    const group = '80000000-0000-4000-8000-000000000001'
+    let current = { ...plan, status: 'draft', items: [
+      { ...plan.items[0]!, dayOfWeek: 1, description: 'Sentetik kahvaltı seçeneği A', alternativeGroupId: group },
+      { ...plan.items[0]!, id: '60000000-0000-4000-8000-000000000004', sortOrder: 1, dayOfWeek: 1, description: 'Sentetik kahvaltı seçeneği B', alternativeGroupId: group },
+      { ...plan.items[2]!, sortOrder: 2, dayOfWeek: 2, description: 'Sentetik güne özel akşam' },
+      { ...plan.items[1]!, sortOrder: 3, description: 'Sentetik ortak öğle önerisi' },
+    ].map(item => ({ ...item, dayOfWeek: item.dayOfWeek as number | null, alternativeGroupId: item.alternativeGroupId as string | null })) }
+    type EditorContent = Pick<typeof current, 'title' | 'startDate' | 'endDate' | 'dailyCaloriesTargetKcal' | 'dailyWaterTargetMl'> & { items: Omit<typeof current.items[number], 'id' | 'nutritionPlanId'>[] }
+    const writes: EditorContent[] = []
+    await page.route('**/api/v1/nutrition-plans**', async route => {
+      const path = new URL(route.request().url()).pathname
+      if (path === '/api/v1/nutrition-plans') return route.fulfill({ json: { items: [current], totalCount: 1 } })
+      if (path === '/api/v1/nutrition-plans/' + planId && route.request().method() === 'PATCH') {
+        const content = route.request().postDataJSON() as EditorContent
+        writes.push(content)
+        current = { ...current, ...content, versionNumber: current.versionNumber + 1,
+          versionId: '55555555-5555-4555-8555-555555555556', items: content.items.map(item => ({ ...item, id: crypto.randomUUID(), nutritionPlanId: planId })) }
+        return route.fulfill({ json: current })
+      }
+      if (path === '/api/v1/nutrition-plans/' + planId) return route.fulfill({ json: current })
+      if (path === `/api/v1/nutrition-plans/${planId}/versions/${current.versionId}`) return route.fulfill({ json: {
+        id: current.versionId, nutritionPlanId: planId, versionNumber: current.versionNumber, createdAt: current.createdAt,
+        snapshot: { title: current.title, startDate: current.startDate, endDate: current.endDate, dailyCaloriesTargetKcal: current.dailyCaloriesTargetKcal, dailyWaterTargetMl: current.dailyWaterTargetMl, items: current.items },
+      } })
+      errors.push('Unexpected editor fixture request: ' + path)
+      return route.fulfill({ status: 501, json: {} })
+    })
+    await page.goto('/calisma-alani/programlar?clientId=' + client.id)
+    await page.getByRole('button', { name: 'Programı düzenle', exact: true }).click()
+    const editor = page.getByRole('form', { name: 'Beslenme programı formu' })
+    await expect(editor).toBeVisible()
+    await expect(page.locator('.nutrition-programs-grid')).not.toBeVisible()
+    await expect(page.locator('.sidebar')).toBeVisible()
+    await expect(editor.locator('svg, img')).toHaveCount(0)
+    expect(await editor.locator('h2').evaluate(node => getComputedStyle(node).fontFamily)).toContain('Manrope')
+    expect(await editor.locator('input').first().evaluate(node => getComputedStyle(node).fontFamily)).toContain('Inter')
+    const goals = await editor.locator('.plan-goals').boundingBox(), summary = await editor.locator('.plan-daily-summary').boundingBox(), work = await editor.locator('.plan-work-area').boundingBox()
+    expect(goals!.y + goals!.height).toBeLessThan(summary!.y)
+    expect(summary!.y + summary!.height).toBeLessThan(work!.y)
+    if (width >= 1280) {
+      const left = await editor.locator('aside').boundingBox(), right = await editor.locator('.plan-week').boundingBox()
+      expect(Math.abs(left!.y - right!.y)).toBeLessThan(2)
+      expect(right!.width).toBeGreaterThan(left!.width * 2)
+      expect(await editor.locator('.plan-goal-fields').evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length)).toBe(4)
+    }
+    await fits(page)
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: testInfo.outputPath(`editor-${width}.png`), fullPage: true })
+    await editor.getByRole('button', { name: 'Salı Akşam hücresini seç', exact: true }).click()
+    await expect(editor.locator('.plan-selected-cell')).toContainText('Salı · Akşam')
+    await editor.getByRole('button', { name: 'Öğün önerisi ekle', exact: true }).click()
+    await editor.getByLabel('Öğün 5 açıklaması', { exact: true }).fill('Sentetik ek akşam önerisi')
+    await editor.getByLabel('Öğün 5 miktar önerisi (isteğe bağlı)', { exact: true }).fill('½ kase veya ihtiyaca göre')
+    await editor.getByRole('button', { name: 'Pazartesi', exact: true }).click()
+    await editor.getByLabel('Hedef gün', { exact: true }).selectOption('2')
+    await editor.getByRole('button', { name: 'Günü kopyala', exact: true }).click()
+    await expect(page.getByRole('alertdialog')).toContainText('Hedef gün dolu')
+    await page.getByRole('button', { name: 'Düzenlemeye dön', exact: true }).click()
+    await editor.getByLabel('Hedef gün', { exact: true }).selectOption('3')
+    await editor.getByRole('button', { name: 'Günü kopyala', exact: true }).click()
+    await expect(editor.getByRole('button', { name: 'Çarşamba', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await editor.getByLabel('Program başlığı', { exact: true }).fill('Sentetik düzenlenmiş haftalık program')
+    await editor.getByRole('button', { name: 'Yazdır', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Yazdır / PDF', exact: true })).toBeEnabled()
+    await expect(page.getByRole('article', { name: 'Yazdırılabilir beslenme programı' })).not.toContainText('Sentetik düzenlenmiş haftalık program')
+    await page.getByRole('button', { name: 'Programlara dön', exact: true }).click()
+    await expect(editor.getByLabel('Program başlığı', { exact: true })).toHaveValue('Sentetik düzenlenmiş haftalık program')
+    await editor.getByRole('button', { name: 'Yeni sürüm kaydet', exact: true }).click()
+    await expect(page.getByText('Yeni program sürümü kaydedildi.', { exact: true })).toBeVisible()
+    await expect(page.getByText('Taslak · Sürüm 2', { exact: true })).toBeVisible()
+    expect(writes).toHaveLength(1)
+    expect(writes[0]!.items.filter(item => item.dayOfWeek === null)).toHaveLength(1)
+    expect(writes[0]!.items.find(item => item.description === 'Sentetik ek akşam önerisi')?.recommendedQuantity).toBe('½ kase veya ihtiyaca göre')
+    const copied = writes[0]!.items.filter(item => item.dayOfWeek === 3)
+    expect(copied).toHaveLength(2)
+    expect(copied[0]!.alternativeGroupId).toBe(copied[1]!.alternativeGroupId)
+    expect(copied[0]!.alternativeGroupId).not.toBe(group)
+    await page.getByRole('button', { name: 'Programı düzenle', exact: true }).click()
+    await expect(editor.getByLabel('Program başlığı', { exact: true })).toHaveValue('Sentetik düzenlenmiş haftalık program')
+    await editor.getByRole('button', { name: 'Vazgeç', exact: true }).click()
+    await expect(editor).not.toBeVisible()
+    await fits(page)
+    expect(errors).toEqual([])
+  })
+}
+
 for (const long of [false, true]) {
   test('nutrition program print ' + (long ? 'fragments a long program into A4 pages' : 'retains Limely layout on desktop and mobile'), async ({ page }, testInfo) => {
     const errors = await fixtures(page)
