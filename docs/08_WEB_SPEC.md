@@ -49,7 +49,9 @@ Güncel web aktivite/laboratuvar görünümleri sentetik önizleme bileşenlerid
 - Referans karşılaştırmasını backend yapar. Eksik/geçersiz referans veya birimde kesin değerlendirme sunulmaz; belgedeki durum işareti sunucunun karşılaştırmasıyla karıştırılmaz. Sistem hastalık teşhisi, tedavi kararı veya kesin klinik yorum üretmez.
 - Geçmiş tahlil karşılaştırmaları ürün gereksinimidir; aynı analit ve uyumlu birimler korunur. Düzeltilmiş rapora ait eski değerlendirme güncelmiş gibi gösterilmez.
 
-İlk belge hedefi e-Nabız'dır; bütün laboratuvar formatları aynı varsayılmaz. Metin katmanlı PDF için doğrudan metin/tablo ayrıştırma, taranmış PDF ve fotoğraf için yerel OCR kullanılır. Araçlar ve işleme akışı [10](10_AI_SPEC.md), açık API/şema/durum kararları [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Bu gereksinimler yeni route veya DTO tanımlamaz.
+29.11.2026 onaylı U7 hedefinde uzman yalnız danışanın o ilişkiye seçerek paylaştığı raporu açar. Güvenlik taraması tamamlanan belge için çıkarımı uzman başlatır; queued/processing/failed/succeeded durumu doğrulamadan ayrıdır. Sürüm değişirse taslak otomatik ezilmez; 409 sonrası sonuçlar yeniden okunur. Düzeltme geçmişi korunur, doğrulama belirli sürüme bağlanır, eski not/değerlendirme güncel gösterilmez. Manuel rapor belgesiz oluşturulabilir; yeni raporun o ilişkiye açılması onay metnindeki manuel kayıt amacını gerektirir. Önceki ilişkiye ait uzman notları yeni uzmana otomatik aktarılmaz. Bunlar henüz çalışan React paneli değildir.
+
+İlk belge hedefi e-Nabız'dır; bütün laboratuvar formatları aynı varsayılmaz. Metin katmanlı PDF için doğrudan metin/tablo ayrıştırma, taranmış PDF ve fotoğraf için yerel OCR kullanılır. Araçlar ve işleme akışı [10](10_AI_SPEC.md), onaylı şema [05](05_DATA_DICTIONARY.md), API/DTO/durumlar [06](06_API_CONTRACT.md), kalan kararlar [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Yeni web UI route'u bu belge paketiyle eklenmez.
 
 ## İstek ve etkileşim davranışı
 

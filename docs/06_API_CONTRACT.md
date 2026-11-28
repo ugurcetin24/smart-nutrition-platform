@@ -2,6 +2,8 @@
 
 İnceleme tabanı: 22.11.2026 / `4f160b3`. “Uygulanan” yollar kaynakta mevcuttur; bu görevde API/DB veya test çalıştırılmadı. Onaylı ürün kararıyla uyuşmayan uygulama kendi kendine yeni sözleşme sayılmaz; açık farklar [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Kalıcı şema [05](05_DATA_DICTIONARY.md), izin/mahremiyet ilkeleri [11](11_SECURITY_AND_RELEASE.md)'dedir.
 
+U7 laboratuvar HTTP/DTO sözleşmesi 29.11.2026 ortak onay teyidiyle aşağıda ayrıca tanımlanmıştır. Henüz uygulanmış endpoint envanterine dahil değildir; eski taslak laboratuvar yollarının yerini alır.
+
 ## Ortak biçim ve kimlik
 
 API kökü `/api/v1`, JSON camelCase, UUID string, decimal JSON number, enum [04](04_NAMING_CONVENTIONS.md)'teki string değeridir. Instant açık Z/±HH:mm ISO 8601 olarak girilir; UTC ve PostgreSQL mikro-saniye hassasiyetine normalize edilir. Date YYYY-MM-DD'dir. Nullable yanıt alanları, özel auth token istisnası dışında açık null kalır.
@@ -274,14 +276,98 @@ Aşağıdaki yollar önceki belgelerin taslaklarıdır; kaynak envanterinde yokt
 | GET /api/v1/food-items | Hibrit katalog araması; kaynak/lisans/yanıt açık |
 | GET/POST /api/v1/recipes; GET/PATCH /api/v1/recipes/{recipeId} | Kendi tarifleri; bileşen/porsiyon/görünürlük/geçmiş açık, DELETE türetilmez |
 | POST /api/v1/food-analyses; GET /api/v1/food-analyses/{analysisId} | Taslak image multipart,202 id/status ve kontrollü öneri okuma; dosya/onay/üretim şeması açık |
-| GET/POST /api/v1/lab-reports; GET/PATCH/DELETE /api/v1/lab-reports/{labReportId} | Manuel rapor/değer/birim/referans; tam alt kayıt/güncelleme/saklama açık |
-| POST/GET /api/v1/lab-reports/{labReportId}/insights | Açıklayıcı analiz; method/limitations ve güncellenmiş raporda eski sonuç davranışı açık |
-| POST /api/v1/lab-reports/ocr | Taslak document multipart; PDF/fotoğraf,limit,iş/taslak yanıtı/onay kanıtı açık;200/202 kesinleştirilmez |
-| GET /api/v1/dietitian/clients/{clientId}/activity-logs; GET /api/v1/dietitian/clients/{clientId}/lab-reports | Planlanan kategori/yetki; tahlilde ayrıca geri çekilmemiş açık onay gerekir |
-| GET/POST /api/v1/consent-records; POST /api/v1/consent-records/{consentRecordId}/withdraw | Kendi consentType/granted/policyVersion kaydı ve geri çekme; tür/kapsam/metin/kanıt açık |
+| GET /api/v1/dietitian/clients/{clientId}/activity-logs | Planlanan kategori/yetki; mevcut HealthData yollarını uzmana açmaz |
 
 Korunan FoodAnalysis önerisi displayName, confidence 0..1, nullable quantityGrams/caloriesKcal/proteinGrams/carbsGrams/fatGrams; limitations kökte list<string>'dir. Kullanıcı ayrı MealLog ile onaylar, otomatik confirm route'u eklenmez.
 
-Korunan manuel lab taslağı collectedAt, nullable labName/note ve results {testName,nullable testCode,value,unit,nullable referenceLow/referenceHigh}; flag sunucudan ve uygun olmayan aralıkta unknown olur. ConsentRecord oluşturmak tek başına paylaşım vermez; geri çekme zamanı sunucudan gelir ve önceki politika/kabul geçmişi korunur.
+Laboratuvar ve tahlile özel ConsentRecord için eski taslak yerine aşağıdaki U7 sözleşmesi kullanılır. `POST /api/v1/lab-reports/ocr` hedef endpoint değildir; belge yükleme ile çıkarım başlatma ayrılmıştır. FoodAnalysis ve diğer açık taslaklar U7 kapsamında kesinleştirilmez.
 
 Bildirim, PDF, şikâyet ve diğer Admin operasyonları onaylı kapsamdır fakat kesin route/DTO yoktur; uydurulmaz. Kalan kararlar [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir.
+
+## U7 — onaylı laboratuvar HTTP sözleşmesi, henüz uygulanmadı
+
+### Yetki ve kimlik
+
+Kendi metadata/belge/yükleme/silme/paylaşım/onay işlemleri yalnız doğrulanmış client JWT + client profil bağlamındadır; kendi clientId/userId gönderilmez. Uzman işlemleri güncel onaylı DietitianProfile ile dietitian bağlamında JWT veya W2 cookie kabul eder. Cookie yazmalarında HTTPS Origin ve CSRF zorunludur; bearer+cookie birlikte 400, Admin erişimi 403'tür. Bu yolların WebSessionAuthentication.GuardAsync ve no-store kapsamına alınması U8/U11 uygulama gereğidir; mevcut guard bunu henüz sağlamaz.
+
+Uzman her okumada ve yazmada kendi aktif ilişkisi + lab_reports kategori izni + kullanıcı/ilişki/amaç/politika eşleşen geri çekilmemiş ConsentRecord + rapora ait LabReportShare.isGranted=true koşullarını sağlar. Manuel yeni rapor oluştururken rapor henüz yoktur; aktif ilişki/kategori/onay ve onay metnindeki manuel kayıt amacı denetlenir, yeni rapor yalnız o ilişkiye atomik paylaşılır. Uzman başka raporun paylaşımını açamaz. Sahip danışanın metadata/belge/silme erişimi ilişki gerektirmez; uygulama mobilde sonuç/not/değerlendirme sunmaz. Veri hakkı talepleri bu ekran sınırından bağımsız olarak [11](11_SECURITY_AND_RELEASE.md)'e tabidir.
+
+### Method ve yollar
+
+Aşağıdaki yollar `/api/v1` altındadır. `{id}` LabReport.id'dir. POST 201 yanıtlarında ilgili kaynak Location'ı bulunur. GET'ler gövde kabul etmez; tabloda belirtilmeyen query/gövde alanları reddedilir.
+
+| Method + yol | Girdi | Başarı / kapsam |
+|---|---|---|
+| POST /lab-reports (multipart/form-data) | Tek `document` dosyası; isteğe bağlı labName, collectedAt veya collectedDate metin alanları | Danışan; 201 LabReportSummaryResponse. Version 1, quarantined belge, paylaşım kapalı, processingStatus null; OCR başlamaz. |
+| POST /lab-reports (application/json) | CreateManualLabReportRequest | Uzman; 201 aynı LabReportSummaryResponse. Source manual, belge null, sonuçlar taslak. |
+| GET /lab-reports | page, pageSize | Danışanın silinmemiş rapor metadata'sı; `PagedResponse<LabReportSummaryResponse>`. |
+| GET /dietitian/clients/{clientId}/lab-reports | page, pageSize | Uzmanın güncel yetkisine göre seçilmiş rapor metadata'sı; aynı sayfalı DTO. |
+| GET /lab-reports/{id} | Query yok | Sahip veya yetkili uzman; 200 aynı metadata DTO'su. |
+| GET /lab-reports/{id}/document | İsteğe bağlı standart HTTP Range | Sahip veya yetkili uzman; clean orijinal, 200/206 dosya akışı. Belge yoksa 404, tarama bitmemiş/rejected ise 409. |
+| GET /lab-reports/{id}/sharing | relationshipId | Yalnız sahip; kendi ilişkisindeki seçimi 200 LabReportShareResponse ile okur. Satır yoksa isGranted=false ve nullable metadata null'dır. |
+| PATCH /lab-reports/{id}/sharing | UpdateLabReportShareRequest | Yalnız sahip; 200 LabReportShareResponse. True için aktif ilişki/kategori/onay ve varsa clean belge gerekir. False, kendi eski/sona ermiş ilişkisinde de mümkündür; olmayan satırda false no-op'tur. |
+| GET /lab-reports/{id}/results | page, pageSize, versionNumber | Yalnız uzman; güncel sürümle eşleşen `PagedResponse<LabResultResponse>`. Sürüm değişmişse 409; eski sayfalar birleştirilmez. |
+| POST /lab-reports/{id}/analyses | StartLabAnalysisRequest | Yalnız uzman; clean belge ve giriş sürümüyle 202 LabProcessingResponse, iş Location'ı. Aynı rapor/sürüm/ilişkide etkin iş varsa aynı iş döner. |
+| GET /lab-reports/{id}/analyses/{analysisId} | Query yok | Yalnız uzman; 200 LabProcessingResponse. İş rapora/ilişkiye ait olmalıdır. |
+| PATCH /lab-reports/{id} | PatchLabReportRequest | Yalnız uzman; metadata/sonuç değişikliği, 200 yeni LabReportSummaryResponse. |
+| POST /lab-reports/{id}/verifications | VerifyLabReportRequest | Yalnız uzman; yeni doğrulama 201 LabReportVerificationResponse. Aynı sürümün tekrarı yetki kontrolünden sonra mevcut kanıtla 200. |
+| GET /lab-reports/{id}/versions | page, pageSize | Yalnız uzman; `PagedResponse<LabReportVersionInfo>`. |
+| GET /lab-reports/{id}/versions/{versionId} | Query yok | Yalnız uzman; 200 LabReportVersionResponse. |
+| POST /lab-reports/{id}/insights | CreateLabInsightRequest | Yalnız uzman; 201 LabInsightResponse, append-only expert_note. |
+| GET /lab-reports/{id}/insights | page, pageSize, versionNumber | Yalnız uzman; özgün ilişkiye ve istenen rapor sürümüne ait `PagedResponse<LabInsightResponse>`. |
+| DELETE /lab-reports/{id} | Query/gövde yok | Yalnız sahip; erişimi kapatan tombstone ve kalıcı temizlik kaydı sonrası 204. Fiziksel silme tamamlandı beyanı değildir. |
+| POST /consent-records | CreateConsentRecordRequest | Yalnız danışan; 201 ConsentRecordResponse. Kategori/rapor paylaşımını kendiliğinden açmaz. |
+| GET /consent-records | relationshipId, page, pageSize | Yalnız danışanın kendi onay geçmişi; `PagedResponse<ConsentRecordResponse>`. |
+| POST /consent-records/{consentRecordId}/withdraw | Query/gövde yok | Yalnız sahibi; ilk/tekrarlı geri çekmede 204. Aktif ilişki zorunlu değildir. |
+
+Listelerde page/pageSize zorunlu, pageSize 1–100 ve offset int32 sınırındadır. Raporlar createdAt DESC/id ASC, sonuçlar position ASC/id ASC, sürümler versionNumber DESC/id ASC, notlar createdAt ASC/id ASC, onaylar recordedAt DESC/id ASC sıralanır. Yetki, totalCount ve veri aynı tutarlı snapshot'ta okunur. Dosya akışında her yeni/Range isteği yeniden yetkilendirilir; storageKey/kalıcı veya public URL dönmez. Kimliksiz erişim HTML'e yönlenmez; dosya 401/403/404 yanıtlarında da no-store geçerlidir. Desteklenmeyen/geçersiz Range için 416 ve Content-Range, ortak hata zarfıyla kullanılır.
+
+### DTO alanları
+
+Alan tipleri [05](05_DATA_DICTIONARY.md)'teki gibi UUID string, decimal number, ISO instant ve YYYY-MM-DD date'tir; nullable alanlar açık null'dır. İç entity doğrudan serialize edilmez.
+
+| DTO | Alanlar |
+|---|---|
+| LabReportSummaryResponse | id, clientId, source, labName?, collectedAt?, collectedDate?, createdAt, updatedAt, versionNumber, processingStatus?, verificationStatus, document? |
+| LabDocumentSummary (document nesnesi) | id, originalFileName, mediaType, sizeBytes, pageCount?, status; hash/storage yolu/çıkarım/sonuç/not yok |
+| LabReportShareResponse | id?, labReportId, relationshipId, isGranted, createdAt?, updatedAt? |
+| LabResultResponse | id, labReportId, testCode?, testName?, rawValue?, value?, comparator?, rawUnit?, unit?, rawReference?, referenceLow?, referenceHigh?, sourceFlag?, flag, sourceDate?, sourceAt?, dateRaw?, dateKind, source, reviewStatus, reviewReason?, warnings:`list<string>`, sourceAnchors:`list<{pageNumber,bbox}>` |
+| LabProcessingResponse | id, labReportId, status, createdAt, startedAt?, completedAt?, errorCode?; raw OCR metni yok |
+| LabReportVersionInfo | id, labReportId, versionNumber, createdAt |
+| LabReportVersionResponse | LabReportVersionInfo alanları + reason, snapshot:{labName?,collectedAt?,collectedDate?,results:LabResultResponse[]} |
+| LabReportVerificationResponse | id, labReportId, versionId, versionNumber, dietitianId, createdAt; onay/dosya hash'i dışarı açılmaz |
+| LabInsightResponse | id, labReportId, versionId, versionNumber, createdAt, summary, method, modelVersion?, limitations:`list<string>`; geçmiş not istenen sürüme bağlıdır |
+| ConsentRecordResponse | id, relationshipId, consentType, scope, granted, policyVersion, recordedAt, withdrawnAt?; user/hash sunucudadır |
+
+processingStatus son işten, verificationStatus belirli içerik sürümünün doğrulamasından türetilir; işin succeeded olması verified değildir. Metadata DTO'su mobil ve webde aynıdır; OCR/notların metadata içine gizlenmesi veya mobilin sonucu indirip yalnız UI'da saklaması yoktur.
+
+| İstek | Alanlar / davranış |
+|---|---|
+| CreateManualLabReportRequest | clientId, nullable labName/collectedAt/collectedDate, results:LabResultInput[]; 1–1000 satır |
+| LabResultInput | nullable testCode/testName/rawValue/value/comparator/unit/rawReference/referenceLow/referenceHigh/sourceFlag/sourceDate/sourceAt/dateRaw; dateKind. Sunucu source=manual ve reviewStatus=pending_review üretir; anlamlı bir test adı veya ham sonuç içeriği gerekir. |
+| UpdateLabReportShareRequest | relationshipId, isGranted; id/consent/sahiplik istemciden alınmaz |
+| StartLabAnalysisRequest / VerifyLabReportRequest | expectedVersionNumber zorunlu, pozitif integer |
+| PatchLabReportRequest | expectedVersionNumber, boş olmayan reason ve en az bir labName/collectedAt/collectedDate/resultChanges alanı. resultChanges 1–1000 öğe; aynı sonuç kimliği bir istekte tekrarlanamaz. |
+| LabResultChange | operation=add/update/exclude. add için resultId gönderilmez ve LabResultInput alanları kullanılır. update için resultId ve en az bir LabResultInput veya reviewStatus/reviewReason alanı; exclude için resultId ve reviewReason gerekir. Operation'a ait olmayan alan 400. |
+| CreateLabInsightRequest | expectedVersionNumber, summary; method/yazar/zaman istemciden alınmaz. Yalnız güncel doğrulanmış sürümde oluşturulur. |
+| CreateConsentRecordRequest | relationshipId, consentType=lab_report_sharing, scope=relationship, granted=true, policyVersion; güncel yayımlanmış metin/sürüm sunucuda doğrulanır ve hash'i kaydedilir |
+
+LabName kırpılmış en çok 200, testName/testCode/unit en çok 200, ham değer/referans/tarih/durum metinlerinin her biri en çok 2000, reason/reviewReason en çok 2000, summary en çok 8000 Unicode kod noktasıdır; NUL reddedilir. Politikada policyVersion boş olmayan en çok 100 karakterdir. JSON yazmaları en çok 512 KiB, onay/paylaşım/başlatma/doğrulama gövdeleri en çok 4096 byte'tır. Gerçek rapor başına en çok 1000 sonuç tutulur; sınır klinik öneri değildir. source/parser/flag/warnings/sourceAnchors/sahiplik/uzman/doğrulama alanları istemciden atanamaz; sourceFlag yalnız kaynaktaki işaretin uzman düzeltmesidir, sunucu flag'i değildir.
+
+PATCH'te atlanan alan korunur; nullable alan null ile temizlenir. Test adı/value/unit taslakta null olabilir. İlişki/sahiplik, id, source veya doğrulama değiştirilemez. Manuel düzeltmede ham girdi gösterimi saklanır; ham OCR kanıtı extractionJson/önceki snapshot'ta değişmeden kalır. accepted/excluded inceleme kararı uzman eylemidir; warnings varsa accepted kararına reviewReason gerekir. Bütün satırlar incelenmeden veya en az bir accepted satır olmadan doğrulama 422'dir. Eksik birim/referansın belgede de bulunmadığının kabulü mümkündür; [05](05_DATA_DICTIONARY.md) gereğince flag unknown kalır. Çelişen L/N/H ham işareti gizlenmez. Kurallı reference_rules açıklamasını istemci yazamaz; U11 doğrulanan sürüm için sunucuda üretir. Yeni analiz tamamlanınca eski not/değerlendirme üzerine yazılmaz.
+
+### Dosya, işlem ve hata davranışı
+
+PDF/JPEG/PNG; dosya başına en çok 20 MiB, PDF en çok 20 sayfa, görüntü en çok 40 megapiksel kabul edilir. Tek dosya ve en çok 32 KiB metadata; HTTP multipart zarf limiti dosya sınırından ayrı, en çok 20 MiB + 64 KiB olacak şekilde gateway/API'de eşlenir. Gerçek MIME/imza/içerik ve sayfa/piksel denetlenir; EXIF/orijinaldeki sağlık metadata'sı loglanmaz. Şifreli/bozuk PDF semantik doğrulama hatasıdır; parola toplama veya koruma aşma akışı yoktur. Derin içerik kontrolü asenkron ise kayıt quarantined kalır; rejected belge paylaşılamaz/görüntülenemez/işlenemez. Güvenlik taraması yüklemede, PDF/OCR çıkarımı uzman başlatmasında çalışır.
+
+İş queued → processing → succeeded/failed/cancelled ilerler. Sunucu girdinin sürüm/hash ve yetkisini kayıttan tekrar çözer; Python servisi kullanıcıdan URL, dosya yolu veya DB yetkisi almaz. İş çıktısı yalnız hâlâ yetkili ve aynı giriş sürümündeki rapora transaction ile yeni taslak sürüm olarak uygulanır. Yeni sürüm sonrası eski doğrulama stale olur. Dosya/izin/onay/ilişki değişimi işin sonucunu sağlık kaydına dönüştüremez. Manuel giriş PDF/OCR servisine bağlı değildir.
+
+HTTP hataları ortak zarf/kodları kullanır: biçim/ek alan 400; kimlik 401; uzmanlık/kategori/onay/rapor seçimi yoksa 403; yabancı/olmayan rapor, yabancı iş veya uygun aktif ilişki yoksa 404; eski sürüm/uyumsuz etkin iş/işlenemeyen belge durumu 409; byte limiti 413; MIME 415; semantik satır/tarih/piksel/sayfa/politika kuralı 422; hız limiti 429. Altyapı hatası 500'dür; boş sonuç/sahte başarı üretilmez. Yetki kontrolü belge/sonuç ayrıntısı ve sürüm varlığı açıklanmadan yapılır.
+
+Kabul edilmiş işin sonradan başarısızlığı HTTP 200 iş durumu içinde failed + güvenli errorCode ile görünür: unsupported_document_layout, invalid_document, ocr_unavailable, processing_timeout, conflict, internal_error. Boş OCR çıktısı uzman doğrulaması veya boş başarılı tahlil sayılmaz. İptal edilmiş iş cancelled'dır. Başlatma/yükleme/yazma belirsiz ağ sonucunda istemci otomatik tekrar göndermez; metadata/iş durumu okunarak uzlaştırılır. Teknik retry aynı işin girişini korur, uzman içeriğini ezmez.
+
+### Altıncı kategoriye geçiş
+
+Mevcut paylaşım uçlarının alan biçimi korunur. lab_reports iznini true açarken consentRecordId zorunlu ve geçerli olmalıdır; false geri çekmede korunmuş onay kimliği kullanılabilir veya null temizlenebilir. Mevcut beş kategoride dolu consentRecordId yine 422'dir. Onay geri çekme aynı transaction'da ona bağlı lab_reports iznini false yapar ve işleri iptal eder. Rapor seçimleri kalsa bile tek başına erişim vermez; ilişki sonlandırma da yeni erişimi kapatır.
+
+Mevcut Flutter okuyucusu beş kategori ve null consentRecordId varsayar. Önce M12 okuyucu/ekran uyumluluğu teslim edilir, sonra yeni kategori satırlarının oluşturulması açılır; genel bayrağı kapatmak eski istemcinin listede gördüğü altıncı satırı kaldırmaz. Mevcut izinler gizlenmez/silinmez, otomatik grant/backfill yapılmaz. Yeni açılım kapalıyken de mevcut kategori false, belge paylaşımı false ve onay geri çekme çalışır. Eski istemcili açılım için sürüm uyumu doğrulanmadan üretim geçişi yapılmaz.

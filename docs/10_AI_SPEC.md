@@ -2,7 +2,7 @@
 
 **Durum: 3 Aralık 2026 çalışmaları için ürün kararları kesinleşti; uygulama ve doğrulama gerekli.** Kaynakta FoodAnalysis/FoodItem/Recipe/LabReport/LabResult/LabInsight için EF, controller veya çalışan model servisi bulunmuyor. Bağımsız katalog önizlemesi ve React'teki sentetik tahlil görünümü gerçek uygulama entegrasyonu değildir.
 
-İsimler [04](04_NAMING_CONVENTIONS.md), korunmuş alan adayları [05](05_DATA_DICTIONARY.md), mevcut olmayan taslak HTTP yolları [06](06_API_CONTRACT.md)'dadır. Bu görevde 04/05/06 değişmez; kesin şema, route, DTO, hata ve analiz durumları araştırma sonuçlarından sonra kararlaştırılacaktır. Bu belge ürün akışını ve Gemini seçimini kaydeder; teknik sözleşmeyi kesinleştirmez.
+İsimler [04](04_NAMING_CONVENTIONS.md), modeller [05](05_DATA_DICTIONARY.md), HTTP [06](06_API_CONTRACT.md)'dadır. 29.11.2026 ortak onay teyidiyle U7 laboratuvar şeması/HTTP/durumları bu kaynaklarda onaylı fakat henüz uygulanmamış sözleşme olarak ayrılmıştır. Yemek/katalog için açık alanlar U7 ile kesinleşmez. Bu belge işleme yaklaşımını ve araştırma sınırını kaydeder.
 
 ## Fotoğraftan yemek analizi
 
@@ -32,7 +32,7 @@ Diyetisyen orijinal belgeyi ve çıkarılan sonuçları birlikte görüntüler, 
 
 Referans karşılaştırması sunucuda yapılır. Geçerli analit/birim/aralık eşleşmesinde yalnız low/normal/high karşılaştırılır; eksik/geçersiz referans veya birimde unknown olur, kesin değerlendirme üretilmez. Genel pozitif değer kuralı veya otomatik klinik eşik uydurulmaz. Belgeden çıkarılan mevcut durum işareti, sunucunun referans karşılaştırmasından ayrı değerlendirilir.
 
-Geçmiş tahlil karşılaştırmaları korunacak ürün gereksinimidir; aynı analit ve aynı/doğrulanmış dönüştürülmüş birim kullanılır. Ölçüm, birim, referans, tarih ve açıklamanın sınırı webde birlikte görünür. Rapor değişince eski LabInsight güncel sonuç gibi sunulmaz; sürüm/yeniden analiz davranışı, method/limitations biçimi ve uzman doğrulamasının teknik kaydı açık karardır.
+Geçmiş tahlil karşılaştırmaları korunacak ürün gereksinimidir; aynı analit ve aynı/doğrulanmış dönüştürülmüş birim kullanılır. Ölçüm, birim, referans, tarih ve açıklamanın sınırı webde birlikte görünür. U7'de LabInsight ve uzman doğrulaması içerik sürümüne bağlanmıştır; düzeltmede eski doğrulama stale olur ve eski açıklama güncel gösterilmez. method=expert_note/reference_rules, `limitations=list<string>` sözleşmesi [04/05/06](06_API_CONTRACT.md)'dadır. Analit eşleştirme ve birim dönüşümü için kaynak/kurallar doğrulanmadan otomatik dönüşüm veya klinik karşılaştırma yapılmaz.
 
 Sistem hastalık teşhisi, tedavi kararı veya kesin klinik yorum üretmez. LabInsight tanı, reçete veya hastalık saptama iddiası taşımaz; “normal” bayrağı genel sağlıklı hükmü değildir.
 
@@ -40,11 +40,19 @@ Sistem hastalık teşhisi, tedavi kararı veya kesin klinik yorum üretmez. LabI
 
 İlk geliştirme hedefi e-Nabız tahlil belgeleridir; bütün laboratuvar formatları aynı varsayılmaz. Metin katmanı bulunan PDF'lerde doğrudan metin/tablo ayrıştırma önceliklidir. Fotoğraf, ekran görüntüsü ve taranmış PDF'lerde yerel OCR kullanılır. **Gerçek tahlil belgeleri Gemini veya başka harici AI servislerine gönderilmez.**
 
-Python/FastAPI, PaddleOCR ve PDF ayrıştırma araçları uygunluk araştırmasında değerlendirilir. U10'un OCR servisi görevi bu araştırmaya bağlıdır; kesin PDF/OCR araçları, sürümleri ve servis ayrıntıları henüz seçilmemiştir.
+U7 onayıyla ilk metin katmanı ayrıştırıcısı pdfplumber, raster işleme yaklaşımı özel ağda çalışan Python/FastAPI üzerinden yerel PaddleOCR'dir. PyMuPDF varsayılan bağımlılık değildir; AGPL/ticari lisans yolu ayrıca kararlaştırılmadan ürüne eklenmez. U10'da PaddleOCR/PaddlePaddle/model sürümleri ve CPU yeterliliği doğrulanacaktır; onay araçların kurulmuş veya gerçek e-Nabız çıktısında ölçülmüş olduğu anlamına gelmez. Paket/model hash'leri ve tüm bağımlılık lisansları uygulama öncesinde sabitlenir.
 
 Test adı, değer, birim, referans aralığı, belgedeki mevcut durum işareti ve tarih yapılandırılmış biçimde çıkarılır. Çıktı uzman incelemesi için taslaktır; otomatik çıkarım veya işlemin tamamlanması doğrulanmış sonuç anlamına gelmez.
 
-OCR'nin otomatik veya diyetisyen tarafından başlatılması, dosya türü/boyutu/PDF sayfa sınırları, tarama/depolama/saklama/silme, işleme durumları ve uzman doğrulamasının sunucu kanıtı açık kararlardır. FoodAnalysisStatus OCR'ye otomatik uygulanmaz; yeni iş/DTO/enum alanları varsayılmaz. Laboratuvar belgesi ile dışa aktarılan diyetisyen PDF raporu farklı kavramdır.
+Güvenlik taraması yüklemede, metin/OCR çıkarımı diyetisyenin açık başlatmasıyla çalışır. Sayfa bazlı yönlendirme kullanılır: metinli sayfada koordinat/tablo ayrıştırma, raster sayfada yerel OCR. Başlık/sütun/satır eşleştirmesi ve çok satırlı adlar korunur; bilinmeyen format/bozuk eşleşme inceleme gerektirir. Virgüllü sayılar bağlama göre ayrıştırılır; 1.234 gibi belirsiz ayırıcı, eksik alan, eşitsizlikli/nitel değer ve belgedeki farklı tarihler tahminle tamamlanmaz. L/N/H kaynak işareti sunucu flag'inden ayrıdır. FoodAnalysisStatus kullanılmaz. Dosya sınırları/durum/DTO [06](06_API_CONTRACT.md), saklama/silme [11](11_SECURITY_AND_RELEASE.md)'dedir. Laboratuvar belgesi ile dışa aktarılan diyetisyen PDF raporu farklı kavramdır.
+
+### U7 araştırma kanıtı ve sınırı — 28.11.2026
+
+Repository dışında yalnız sentetik prototipte Python 3.12.14, pdfplumber 0.11.9, pdfminer.six 20251230, pypdfium2 5.13.0, ReportLab 4.4.9 kullanıldı. Çizgili ve sütunları değiştirilmiş çizgisiz iki PDF'de toplam 30 satırın ad/ham değer/birim/referans/durum/tarih alanları kontrol edildi; 41/41 sentetik kontrol geçti. Türkçe karakter, çok satırlı ad, sıfır/negatif/bilimsel değer, eksik alan, bayrak çelişkisi ve tek kaydırılmış değer örneği kapsandı. Taranmış iki sayfa OCR'ye, karma PDF sayfa bazında yönlendirildi. Bu sayımlar 29.11 belge görevinin yeni test sonucu değildir; geçici prototip dosyaları repository/CI girdisi değildir.
+
+Gerçek e-Nabız belgesi test edilmedi; şablon varsayımlı koordinat prototipi genel format doğruluğu kanıtlamaz. PaddleOCR/PaddlePaddle kurulu değildi; OCR çıkarımı veya CPU/GPU karşılaştırması yapılmadı. İzole PyMuPDF kurulum denemesi paket sunucusunun DNS erişimi nedeniyle başarısız oldu. Doğruluk oranı/servis SLA'sı çıkarılamaz; gerçek sağlık belgesi harici servise gönderilmedi.
+
+Araştırma kaynakları: [pdfplumber projesi ve MIT lisansı](https://github.com/jsvine/pdfplumber), [bağımlılıklar](https://raw.githubusercontent.com/jsvine/pdfplumber/stable/requirements.txt), [PyMuPDF lisans seçenekleri](https://pymupdf.io/licensing), [PaddleOCR paket/lisans tanımı](https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/pyproject.toml), [PaddleOCR kurulum](https://www.paddleocr.ai/main/en/version3.x/installation.html), [Türkçe Latin model kapsamı](https://www.paddleocr.ai/main/en/version3.x/algorithm/PP-OCRv5/PP-OCRv5_multi_languages.html), [PDFium lisans bildirimleri](https://github.com/pypdfium2-team/pypdfium2#licensing), [e-Nabız PDF/tarih aralığı davranışı](https://www.enabiz.gov.tr/Yardim/Index). Hareketli upstream dosyaları üretim lockfile'ı değildir; denenen sürümler de üretim seçimi sayılmaz.
 
 ## Model ve değerlendirme
 
@@ -53,6 +61,8 @@ Yemek analizi sağlayıcısı Gemini olarak kesinleşmiştir; model sürümü ve
 Fotoğraf için ayrık test verisi, Türk yemeklerinin temsili, sınıflandırma precision/recall/F1, porsiyon/kalori hata dağılımı ve kullanıcı düzeltme sıklığı değerlendirilir. Veri ve ölçüm olmadan doğruluk oranı taahhüt edilmez.
 
 Laboratuvar ML araştırması uygun, izinli ve bilimsel olarak anlamlı veri bulunması koşuluyla yürütülür. Etiket kalitesi, leakage kontrolü, bağımsız eğitim/test, sınıf dengesi, açıklanabilirlik ve klinik uzman doğrulaması gerekir. Bu koşullar yoksa referans karşılaştırmasının ötesinde iddia üretilmez.
+
+U7 araştırmasında [NHANES ferritin](https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/FERTIN_L.htm) ve [NCHS kullanım koşulları](https://www.cdc.gov/nchs/policy/data-user-agreement.html), [MIMIC-IV](https://physionet.org/content/mimiciv/3.1/), [100 hastalık ODbL demo](https://physionet.org/content/mimic-iv-demo/2.2/), [CC BY 4.0 UCI Diabetes](https://archive.ics.uci.edu/dataset/296/diabetes) ve [Apache-2.0 Synthea](https://github.com/synthetichealth/synthea) incelendi. NHANES istatistiksel kullanım/örneklem ağırlığı ve alt grup sınırları, MIMIC credentialing/DUA ve hastane nüfusu, UCI'nin yeniden yatış hedefi nedeniyle bu veriler e-Nabız OCR veya Türk diyetisyen danışanına klinik modelin doğrulaması değildir. Synthea test verisidir. Veri indirme/eğitim yapılmadı; klinik ML geliştirmesi önerilmiyor. U14'te öncelik izinli etiketli belgeyle alan eşleştirme/hata ölçümüdür; referanstan türetilen L/N/H'yi öğrenmek deterministik kuralın yerine bilimsel başarı sayılmaz.
 
 ## Mimari ve güvenlik sınırı
 

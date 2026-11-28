@@ -59,7 +59,9 @@ Kaynakta dashboard_demo_data gibi sentetik yardımcı dosyalar vardır; dosya va
 - Belgenin aktif ve yetkili diyetisyene açılması bağımsız paylaşım izni ve tahlile özel açık onay gerektirir. İzin veya açık onay geri çekildiğinde ya da ilişki sona erdiğinde diyetisyenin belge ve sonuç erişimi kapanır.
 - Belge yüklemek, tahlili paylaşmak ve OCR sonucunun uzman tarafından doğrulanması ayrı işlemlerdir. Gerçek tahlil belgeleri Gemini veya başka harici AI servislerine gönderilmez.
 
-Yemek/tahlil işleme ayrıntıları [10](10_AI_SPEC.md), güvenlik [11](11_SECURITY_AND_RELEASE.md), açık teknik kararlar ve M7–M14/U7–U14 görevleri [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Kesin dosya sınırları, durumlar ve API/DTO biçimleri bu ekran gereksinimleriyle belirlenmez.
+29.11.2026 onaylı U7 hedefinde yükleme paylaşımı açmaz; danışan ilişki kapsamlı açık onayı, lab_reports kategori iznini ve rapor bazlı seçimini ayrı yönetir. İşleme mobilde başlatılmaz; ekranda ortak LabReportSummaryResponse metadata/durumları kullanılır, sonuç/not uçları çağrılmaz. M12'de izin okuyucusunun altıncı kategoriye ve dolu consentRecordId'ye uyumu tamamlanmadan yeni kategori satırları açılmaz; mevcut beş kategorili okuyucu bu yanıtları reddeder. M13 metadata/geçmiş/durum tüketicisidir. Bunlar henüz geliştirilmiş mobil davranış değildir.
+
+Yemek/tahlil işleme ayrıntıları [10](10_AI_SPEC.md), güvenlik [11](11_SECURITY_AND_RELEASE.md), kararlar ve M7–M14/U7–U14 görevleri [12](12_TEAM_PLAN_AND_DECISIONS.md)'dedir. Onaylı tahlil dosya sınırları, durumları ve API/DTO biçimlerinin tek kaynağı [06](06_API_CONTRACT.md)'dır; bu ekran belgesi onları tekrar tanımlamaz.
 
 ## Oturum ve parola sıfırlama
 
